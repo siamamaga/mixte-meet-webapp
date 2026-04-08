@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Mixte-Meet</title>
+<meta name="theme-color" content="#E8317A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mixte-Meet">
+<meta name="application-name" content="Mixte-Meet">
+<meta name="msapplication-TileColor" content="#E8317A">
+<meta name="msapplication-TileImage" content="/icons/icon-144.png">
+
+<!-- Open Graph / Partage réseaux sociaux -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Mixte-Meet — L'amour sans frontières">
+<meta property="og:description" content="La plateforme de rencontre qui connecte l'Afrique avec le monde entier.">
+<meta property="og:image" content="/icons/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mixte-Meet">
+<meta name="twitter:image" content="/icons/icon-512.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch.png">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="app-loader">
+    <div class="loader-logo">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <rect width="56" height="56" rx="16" fill="url(#lg)"/>
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="56" y2="56"><stop stop-color="#E8317A"/><stop offset="1" stop-color="#C41F65"/></linearGradient></defs>
+        <path d="M28 36 C22 28, 8 26, 5 31 C2 36, 11 44, 23 39 C25.5 38, 27 37, 28 36Z" fill="white" opacity="0.9"/>
+        <path d="M28 36 C24 30, 12 22, 8 25 C4 28, 10 38, 22 37 C25 37, 27 36.5, 28 36Z" fill="white" opacity="0.6"/>
+        <path d="M28 36 C34 28, 48 26, 51 31 C54 36, 45 44, 33 39 C30.5 38, 29 37, 28 36Z" fill="black" opacity="0.85"/>
+        <path d="M28 36 C32 30, 44 22, 48 25 C52 28, 46 38, 34 37 C31 37, 29 36.5, 28 36Z" fill="black" opacity="0.55"/>
+        <ellipse cx="28" cy="36" rx="1.5" ry="3" fill="rgba(255,255,255,0.8)"/>
+      </svg>
+      <span>Mixte-Meet</span>
+    </div>
+    <div class="loader-spinner"></div>
+  </div>
+
+  <!-- Application -->
+  <div id="app" class="hidden">
+
+    <!-- Auth -->
+    <div id="view-auth" class="view"></div>
+
+    <!-- App -->
+    <div id="view-app" class="view hidden">
+      <nav class="bottom-nav" id="bottom-nav">
+        <button class="nav-btn active" data-page="feed" onclick="App.navigate('feed')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Découvrir</span>
+        </button>
+        <button class="nav-btn" data-page="matches" onclick="App.navigate('matches')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Matchs</span>
+          <span class="nav-badge hidden" id="badge-matches">0</span>
+        </button>
+        <button class="nav-btn" data-page="profile" onclick="App.navigate('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profil</span>
+        </button>
+      </nav>
+
+      <main id="main-content">
+        <div id="page-feed"     class="page active"></div>
+        <div id="page-matches"  class="page hidden"></div>
+        <div id="page-chat"     class="page hidden"></div>
+        <div id="page-profile"  class="page hidden"></div>
+        <div id="page-settings" class="page hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" class="hidden" onclick="Modal.close()">
+    <div id="modal-box" onclick="event.stopPropagation()">
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Scripts dans le bon ordre -->
+  <script src="js/services/api.js"></script>
+  <script src="js/services/auth.service.js"></script>
+  <script src="js/services/socket.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/auth.js"></script>
+  <script src="js/pages/feed.js"></script>
+  <script src="js/pages/matches.js"></script>
+  <script src="js/pages/chat.js"></script>
+  <script src="js/pages/profile.js"></script>
+  <script src="js/pages/pricing.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
