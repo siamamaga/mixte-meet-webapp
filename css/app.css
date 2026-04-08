@@ -306,3 +306,32 @@ body {
   }
   body { background: #050305; }
 }
+
+/* ── CONTINENT FILTER BUTTONS ─────────────────── */
+.continent-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none !important;
+  outline: none !important;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.6);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none !important;
+}
+.continent-btn:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.continent-btn.active {
+  background: linear-gradient(135deg, var(--pink), #C41F65);
+  color: white;
+  font-weight: 600;
+}
