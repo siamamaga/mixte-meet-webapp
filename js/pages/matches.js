@@ -59,13 +59,13 @@ const MatchesPage = (() => {
               ${m.online ? '<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;background:var(--green);border:2px solid var(--dark);border-radius:50%;"></div>' : ''}
             </div>
             <span style="font-size:12px;font-weight:500;color:${m.unread ? 'var(--white)' : 'var(--muted)'};">${m.first_name}</span>
-          </div>
+          </button>
         `).join('')}
       </div>
       <div class="section-head"><h3>Messages</h3></div>
       <div style="display:flex;flex-direction:column;gap:2px;padding:0 8px;">
         ${matches.map((m, i) => `
-          <div class="match-item" onclick="MatchesPage.openMatch(${i})">
+          <button class="match-item" onclick="MatchesPage.openMatch(${i})" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;">
             <div class="match-avatar">
               <div style="background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;border-radius:50%;">
                 ${m.emoji || '👤'}
@@ -80,7 +80,7 @@ const MatchesPage = (() => {
               <span class="match-time">${m.last_message_at ? Utils.timeAgo(m.last_message_at) : ''}</span>
               ${m.unread ? `<span class="match-unread-badge">${m.unread}</span>` : ''}
             </div>
-          </div>
+          </button>
         `).join('')}
       </div>
       ${matches.length === 0 ? `<div class="empty-state"><div class="empty-state-icon">💞</div><h3>Pas encore de matchs</h3><p>Continuez a decouvrir des profils !</p><button class="btn btn-primary" style="margin-top:16px;" onclick="App.navigate('feed')">Decouvrir des profils</button></div>` : ''}

@@ -220,7 +220,7 @@ const FeedPage = (() => {
                 <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;">C'est un Match !</h2>
                 <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">Vous et <strong style="color:white;">${profile.first_name}</strong> vous vous êtes likés !</p>
                 <div style="display:flex;gap:10px;justify-content:center;">
-                  <button onclick="Modal.close();App.navigate('matches')" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Message</button>
+                  <button onclick="Modal.close();ChatPage.open(profile)" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Message</button>
                   <button onclick="Modal.close()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;padding:12px 24px;border-radius:50px;cursor:pointer;font-family:'Outfit',sans-serif;">Continuer</button>
                 </div>
               </div>`,''),400);
@@ -232,7 +232,7 @@ const FeedPage = (() => {
               <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;">C'est un Match !</h2>
               <p style="color:var(--muted);font-size:14px;margin-bottom:20px;"><strong style="color:white;">${profile.first_name}</strong> vous a aussi liké ! 👋</p>
               <div style="display:flex;gap:10px;justify-content:center;">
-                <button onclick="Modal.close();App.navigate('matches')" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Message</button>
+                <button onclick="Modal.close();ChatPage.open(profile)" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">💬 Message</button>
                 <button onclick="Modal.close()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;padding:12px 24px;border-radius:50px;cursor:pointer;font-family:'Outfit',sans-serif;">Continuer</button>
               </div>
             </div>`,''),400);
@@ -274,4 +274,5 @@ const FeedPage = (() => {
     reload() { currentIdx=0; profiles=[]; loadProfiles(); },
   };
 })();
+
 
