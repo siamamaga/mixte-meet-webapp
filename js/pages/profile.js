@@ -409,7 +409,7 @@ const ProfilePage = (() => {
                 '<div>❌ Pas de filtre photo</div>' +
               '</div>' +
             '</div>' +
-            '<input type="file" id="selfie-input" accept="image/*" capture="user" style="display:none;" onchange="ProfilePage._previewSelfie(this)">' +
+            '<input type="file" id="selfie-input" accept="image/*" capture="user" style="position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px;" onchange="ProfilePage._previewSelfie(this)">' +
             '<button onclick="document.getElementById(\'selfie-input\').click()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px 32px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;width:100%;font-size:15px;">📷 Prendre le selfie</button>' +
             '<p style="font-size:11px;color:var(--muted);margin-top:10px;">🔒 Photo utilisee uniquement pour verification</p>' +
           '</div>' +
@@ -683,6 +683,7 @@ const SettingsPage = {
     }
   },
 };
+
 
 
 
