@@ -17,9 +17,14 @@ const ChatPage = (() => {
   const DEMO_REPLIES = ["Super !", 'Vraiment ?', "J'adore ca !", 'Raconte-moi plus', 'Haha oui !', 'C est cool !'];
 
   function isDemo() {
-    if (!currentMatch || !currentMatch.uuid) return true;
+    if (!currentMatch) return true;
+    if (!currentMatch.uuid) return true;
     const uid = String(currentMatch.uuid);
-    return uid === 'm1' || uid === 'm2' || uid === 'm3' || uid === 'm4';
+    // Profil demo = uuid court comme m1/m2 OU type demo OU pas de vrai UUID
+    if (uid === 'm1' || uid === 'm2' || uid === 'm3' || uid === 'm4') return true;
+    if (currentMatch.profile_type === 'demo') return true;
+    if (uid.length < 10) return true; // UUID réel = long (ex: abc123-def456...)
+    return false;
   }
 
   function open(match) {
@@ -208,3 +213,4 @@ const ChatPage = (() => {
     },
   };
 })();
+
