@@ -257,3 +257,4 @@ const FeedPage = (() => {
     reload() { currentIdx=0; profiles=[]; loadProfiles(); },
   };
 })();
+
