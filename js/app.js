@@ -66,6 +66,11 @@ const App = (() => {
     SocketService.connect();
   }
 
+  // Keep-alive backend toutes les 10 min pour eviter l'endormissement
+  setInterval(() => {
+    fetch('https://mixte-meet-backend.onrender.com/api/health').catch(() => {});
+  }, 600000);
+
   // Démarrer au chargement
   document.addEventListener('DOMContentLoaded', init);
 
@@ -77,3 +82,4 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
