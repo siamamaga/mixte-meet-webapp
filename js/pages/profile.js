@@ -364,9 +364,110 @@ const ProfilePage = (() => {
       }
     },
 
-    requestVerification() {
+    async requestVerification() {
       const user = AuthService.getUser() || {};
-      if (user.is_verified) { Toast.info('Votre profil est déjà vérifié ✅'); return; }
+      if (user.is_verified) { Toast.info('Votre profil est deja verifie !'); return; }
+
+      try {
+        const status = await API.get('/me/verify');
+        if (status?.data?.verification_status === 'pending') {
+          Modal.show(
+            '<div style="text-align:center;padding:16px;">' +
+              '<div style="font-size:56px;margin-bottom:12px;">⏳</div>' +
+              '<h3 style="font-family:Playfair Display,serif;font-size:20px;margin-bottom:8px;">Verification en cours</h3>' +
+              '<p style="color:var(--muted);font-size:14px;margin-bottom:8px;">Votre selfie est en cours d\'examen par notre equipe.</p>' +
+              '<p style="color:var(--muted);font-size:12px;margin-bottom:20px;">Delai habituel : 24-48h</p>' +
+              '<button onclick="Modal.close()" style="background:var(--pink);border:none;color:white;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">OK</button>' +
+            '</div>', '');
+          return;
+        }
+      } catch(e) {}
+
+      const GESTURES = [
+        { emoji: '👋', label: 'Faites un signe de la main' },
+        { emoji: '✌️', label: 'Faites le signe V' },
+        { emoji: '👍', label: 'Faites un pouce en haut' },
+        { emoji: '🤞', label: 'Croisez les doigts' },
+        { emoji: '🖐️', label: 'Montrez votre paume ouverte' },
+      ];
+      const gesture = GESTURES[Math.floor(Math.random() * GESTURES.length)];
+      ProfilePage._currentGesture = gesture.emoji;
+
+      Modal.show(
+        '<div id="verif-step1">' +
+          '<div style="text-align:center;padding:8px 0 20px;">' +
+            '<div style="font-size:72px;margin-bottom:16px;">' + gesture.emoji + '</div>' +
+            '<h3 style="font-family:Playfair Display,serif;font-size:20px;font-weight:700;margin-bottom:8px;">Prenez un selfie</h3>' +
+            '<p style="color:var(--muted);font-size:14px;margin-bottom:4px;">Pour verifier votre identite :</p>' +
+            '<p style="font-size:16px;font-weight:600;color:white;margin-bottom:20px;">' + gesture.label + '</p>' +
+            '<div style="background:rgba(232,49,122,0.1);border:1px solid rgba(232,49,122,0.2);border-radius:12px;padding:12px;margin-bottom:20px;text-align:left;">' +
+              '<div style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px;">' +
+                '<div>✅ Visage clairement visible</div>' +
+                '<div>✅ Bonne luminosite</div>' +
+                '<div>✅ Geste bien visible</div>' +
+                '<div>❌ Pas de lunettes de soleil</div>' +
+                '<div>❌ Pas de filtre photo</div>' +
+              '</div>' +
+            '</div>' +
+            '<input type="file" id="selfie-input" accept="image/*" capture="user" style="display:none;" onchange="ProfilePage._previewSelfie(this)">' +
+            '<button onclick="document.getElementById(\'selfie-input\').click()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px 32px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;width:100%;font-size:15px;">📷 Prendre le selfie</button>' +
+            '<p style="font-size:11px;color:var(--muted);margin-top:10px;">🔒 Photo utilisee uniquement pour verification</p>' +
+          '</div>' +
+        '</div>' +
+        '<div id="verif-step2" style="display:none;text-align:center;">' +
+          '<div style="font-size:14px;font-weight:600;margin-bottom:12px;">Verifiez votre selfie</div>' +
+          '<div style="width:180px;height:180px;border-radius:50%;overflow:hidden;margin:0 auto 16px;border:3px solid var(--pink);" id="selfie-preview-wrap"></div>' +
+          '<p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Le geste est bien visible ?</p>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="ProfilePage._retakeSelfie()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:Outfit,sans-serif;">🔄 Reprendre</button>' +
+            '<button onclick="ProfilePage._submitSelfie()" id="btn-send-selfie" style="flex:1;background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">✅ Envoyer</button>' +
+          '</div>' +
+        '</div>',
+        '🤳 Verification');
+    },
+
+    _currentGesture: null,
+    _selfieFile: null,
+
+    _previewSelfie(input) {
+      const file = input.files[0];
+      if (!file) return;
+      ProfilePage._selfieFile = file;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const wrap = document.getElementById('selfie-preview-wrap');
+        if (wrap) wrap.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+        document.getElementById('verif-step1').style.display = 'none';
+        document.getElementById('verif-step2').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    },
+
+    _retakeSelfie() {
+      ProfilePage._selfieFile = null;
+      document.getElementById('verif-step1').style.display = 'block';
+      document.getElementById('verif-step2').style.display = 'none';
+      document.getElementById('selfie-input').value = '';
+    },
+
+    async _submitSelfie() {
+      if (!ProfilePage._selfieFile) { Toast.error('Aucun selfie selectionne'); return; }
+      const btn = document.getElementById('btn-send-selfie');
+      if (btn) { btn.disabled = true; btn.textContent = 'Envoi...'; }
+      try {
+        const formData = new FormData();
+        formData.append('selfie', ProfilePage._selfieFile);
+        formData.append('gesture', ProfilePage._currentGesture || '');
+        await API.upload('/me/verify', formData);
+        ProfilePage._selfieFile = null;
+        ProfilePage._currentGesture = null;
+        Modal.close();
+        Toast.success('Selfie envoye ! Verification en cours (24-48h) ⏳');
+      } catch(err) {
+        Toast.error(err.message || 'Erreur lors de l\'envoi');
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Envoyer'; }
+      }
+    },
       Modal.show(`
         <div style="text-align:center;padding:8px;">
           <div style="font-size:48px;margin-bottom:12px;">🤳</div>
