@@ -272,7 +272,14 @@ const FeedPage = (() => {
 
     showNotifs() { Toast.info('Aucune nouvelle notification'); },
     reload() { currentIdx=0; profiles=[]; loadProfiles(); },
+    openChat() {
+      const profile = profiles[currentIdx];
+      if (!profile) return;
+      ChatPage.open(profile);
+    },
   };
 })();
+
+
 
 

@@ -168,7 +168,12 @@ const ChatPage = (() => {
       const text = input.value.trim();
       input.value = '';
 
-      // Afficher immédiatement côté envoyeur
+    reload() { currentIdx=0; profiles=[]; loadProfiles(); },
+    openChat() {
+      const profile = profiles[currentIdx];
+      if (!profile) return;
+      ChatPage.open(profile);
+    },
       const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
       const optimistic = { id: Date.now(), sent: true, content: text, time: now };
       appendMsg(optimistic);
@@ -216,3 +221,4 @@ const ChatPage = (() => {
     },
   };
 })();
+
