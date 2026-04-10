@@ -24,7 +24,12 @@ const MatchesPage = (() => {
 
   function openMatch(index) {
     const match = matches[index];
-    if (match) ChatPage.open(match);
+    if (!match) { alert("Erreur: match introuvable index=" + index); return; }
+    try {
+      ChatPage.open(match);
+    } catch(e) {
+      alert("Erreur chat: " + e.message);
+    }
   }
 
   async function render() {
@@ -89,3 +94,4 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
