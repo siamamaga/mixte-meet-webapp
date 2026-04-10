@@ -204,13 +204,120 @@ const ChatPage = (() => {
     },
 
     showOptions() {
+      const uuid = currentMatch?.uuid || '';
+      const name = currentMatch?.first_name || 'cet utilisateur';
+      const isBlocked = currentMatch?.is_blocked || false;
       Modal.show(
         '<div style="display:flex;flex-direction:column;gap:4px;">' +
-          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Profil ouvert\')"><span class="settings-icon">&#128100;</span><div class="settings-text"><span>Voir le profil</span></div></div>' +
-          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Utilisateur bloque\')"><span class="settings-icon">&#128683;</span><div class="settings-text"><span>Bloquer</span></div></div>' +
-          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Utilisateur signale\')"><span class="settings-icon">&#9888;</span><div class="settings-text"><span>Signaler</span></div></div>' +
+          '<div class="settings-row" onclick="Modal.close();ChatPage.viewProfile()">' +
+            '<span class="settings-icon">&#128100;</span>' +
+            '<div class="settings-text"><span>Voir le profil</span><small>Photos, bio, infos</small></div>' +
+            '<span class="settings-arrow">&#8250;</span>' +
+          '</div>' +
+          '<div class="settings-row" onclick="Modal.close();ChatPage.blockUser()">' +
+            '<span class="settings-icon">&#128683;</span>' +
+            '<div class="settings-text"><span style="color:var(--gold);">Bloquer</span><small>Plus de contact avec cet utilisateur</small></div>' +
+            '<span class="settings-arrow">&#8250;</span>' +
+          '</div>' +
+          '<div class="settings-row" onclick="Modal.close();ChatPage.reportUser()">' +
+            '<span class="settings-icon">&#9888;&#65039;</span>' +
+            '<div class="settings-text"><span style="color:var(--red);">Signaler</span><small>Comportement inapproprié</small></div>' +
+            '<span class="settings-arrow">&#8250;</span>' +
+          '</div>' +
         '</div>', 'Options');
+    },
+
+    viewProfile() {
+      if (!currentMatch) return;
+      const flag = Utils.countryFlag(currentMatch.country_code);
+      Modal.show(
+        '<div style="text-align:center;padding:8px;">' +
+          '<div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto 16px;overflow:hidden;">' +
+            (currentMatch.main_photo
+              ? '<img src="' + currentMatch.main_photo + '" style="width:100%;height:100%;object-fit:cover;">'
+              : (currentMatch.emoji || '&#128100;')) +
+          '</div>' +
+          '<h2 style="font-family:Playfair Display,serif;font-size:22px;font-weight:700;margin-bottom:4px;">' + (currentMatch.first_name || '') + ', ' + (currentMatch.age || '?') + '</h2>' +
+          '<p style="font-size:14px;color:var(--muted);margin-bottom:8px;">' + flag + ' ' + (currentMatch.city || currentMatch.country_name || '') + (currentMatch.profession ? ' · ' + currentMatch.profession : '') + '</p>' +
+          (currentMatch.bio ? '<p style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:16px;padding:0 8px;">' + currentMatch.bio + '</p>' : '') +
+          '<button onclick="Modal.close()" style="background:var(--pink);border:none;color:white;padding:12px 32px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Fermer</button>' +
+        '</div>', currentMatch.first_name || 'Profil');
+    },
+
+    blockUser() {
+      if (!currentMatch) return;
+      const name = currentMatch.first_name || 'cet utilisateur';
+      Modal.show(
+        '<div style="text-align:center;padding:8px;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">&#128683;</div>' +
+          '<h3 style="font-size:18px;font-weight:700;margin-bottom:8px;">Bloquer ' + name + ' ?</h3>' +
+          '<p style="color:var(--muted);font-size:13px;margin-bottom:20px;">Vous ne verrez plus ce profil et il ne pourra plus vous contacter.</p>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="Modal.close()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:Outfit,sans-serif;">Annuler</button>' +
+            '<button onclick="ChatPage._doBlock()" style="flex:1;background:var(--gold);border:none;color:black;padding:12px;border-radius:50px;cursor:pointer;font-weight:700;font-family:Outfit,sans-serif;">Bloquer</button>' +
+          '</div>' +
+        '</div>', '');
+    },
+
+    async _doBlock() {
+      Modal.close();
+      if (!currentMatch?.uuid || isDemo()) { Toast.info('Action non disponible en mode démo'); return; }
+      try {
+        await API.post('/block', { blocked_uuid: currentMatch.uuid });
+        currentMatch.is_blocked = true;
+        Toast.success(currentMatch.first_name + ' a été bloqué ✅');
+        setTimeout(() => ChatPage.close(), 1500);
+      } catch(e) {
+        Toast.error(e.message || 'Erreur lors du blocage');
+      }
+    },
+
+    reportUser() {
+      if (!currentMatch) return;
+      const name = currentMatch.first_name || 'cet utilisateur';
+      Modal.show(
+        '<div style="display:flex;flex-direction:column;gap:14px;">' +
+          '<p style="font-size:14px;color:var(--muted);">Pourquoi signalez-vous ' + name + ' ?</p>' +
+          '<div style="display:flex;flex-direction:column;gap:8px;">' +
+            ['Faux profil / Usurpation','Photos inappropriées','Harcèlement','Spam / Arnaque','Contenu haineux','Autre raison'].map(function(r) {
+              return '<div class="settings-row" onclick="ChatPage._selectReason(this,\'' + r + '\')" style="cursor:pointer;">' +
+                '<div class="settings-text"><span style="font-size:14px;">' + r + '</span></div>' +
+                '<span id="check-' + r.replace(/ /g,'') + '" style="color:var(--pink);font-size:18px;opacity:0;">&#10003;</span>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+          '<textarea id="report-desc" class="input-field" placeholder="Détails supplémentaires (optionnel)..." rows="3" style="resize:none;"></textarea>' +
+          '<button onclick="ChatPage._doReport()" style="background:var(--red);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Envoyer le signalement</button>' +
+        '</div>', '&#9888;&#65039; Signaler');
+    },
+
+    _selectedReason: null,
+    _selectReason(el, reason) {
+      ChatPage._selectedReason = reason;
+      document.querySelectorAll('.settings-row span[id^="check-"]').forEach(s => s.style.opacity = '0');
+      const checkId = 'check-' + reason.replace(/ /g,'');
+      const check = document.getElementById(checkId);
+      if (check) check.style.opacity = '1';
+    },
+
+    async _doReport() {
+      if (!ChatPage._selectedReason) { Toast.error('Sélectionnez une raison'); return; }
+      if (!currentMatch?.uuid || isDemo()) { Toast.info('Action non disponible en mode démo'); return; }
+      const description = document.getElementById('report-desc')?.value.trim();
+      try {
+        await API.post('/report', {
+          reported_uuid: currentMatch.uuid,
+          reason: ChatPage._selectedReason,
+          description,
+        });
+        ChatPage._selectedReason = null;
+        Modal.close();
+        Toast.success('Signalement envoyé. Merci de nous aider à garder la communauté sûre ✅');
+      } catch(e) {
+        Toast.error(e.message || 'Erreur lors du signalement');
+      }
     },
   };
 })();
+
 
