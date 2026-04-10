@@ -315,6 +315,17 @@ const AuthPage = (() => {
 
     selectGender(v)      { onboardingData.gender = v; document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); event.currentTarget.classList.add('selected'); },
     selectLookingFor(v)  { onboardingData.looking_for = v; document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); event.currentTarget.classList.add('selected'); },
+    togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    },
     toggleLang(v, el) {
       onboardingData.languages = onboardingData.languages || [];
       if (onboardingData.languages.includes(v)) { onboardingData.languages = onboardingData.languages.filter(l => l !== v); el.classList.remove('active'); }
@@ -366,3 +377,4 @@ const AuthPage = (() => {
     },
   };
 })();
+
