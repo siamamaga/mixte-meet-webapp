@@ -1,125 +1,217 @@
-// js/pages/profile.js
+// js/pages/profile.js — Production complète
 const ProfilePage = (() => {
-  function render() {
-    const user = AuthService.getUser() || { first_name:'Utilisateur', country_code:'FR', is_premium:false, coins:0 };
-    const flag = (code) => {
-      if (!code || code.length !== 2) return '🌍';
-      return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
-    };
 
-    document.getElementById('page-profile').innerHTML = `
+  const FLAG = (code) => {
+    if (!code || code.length !== 2) return '🌍';
+    try { return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)); }
+    catch { return '🌍'; }
+  };
+
+  // ── Calcul complétion profil ────────────────────────────────────────────
+  function calcCompletion(user, photos) {
+    let score = 0;
+    if (user.first_name)   score += 15;
+    if (user.bio)          score += 20;
+    if (user.profession)   score += 10;
+    if (user.birth_date)   score += 10;
+    if (user.country_code) score += 5;
+    if (user.city)         score += 5;
+    if (photos.length >= 1) score += 15;
+    if (photos.length >= 3) score += 10;
+    if (photos.length >= 6) score += 10;
+    if (user.is_verified)  score += 0; // bonus visuel seulement
+    return Math.min(score, 100);
+  }
+
+  // ── Render principal ────────────────────────────────────────────────────
+  async function render() {
+    const page = document.getElementById('page-profile');
+    if (!page) return;
+
+    // Skeleton loader
+    page.innerHTML = `
       <div class="page-header">
         <div class="page-header-title">Mon Profil</div>
         <button class="header-btn" onclick="App.navigate('settings');SettingsPage.render()">⚙️</button>
       </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 16px;">
+        <div style="width:100px;height:100px;border-radius:50%;background:var(--surface);"></div>
+        <div style="width:140px;height:20px;border-radius:8px;background:var(--surface);"></div>
+        <div style="width:100%;height:80px;border-radius:12px;background:var(--surface);"></div>
+      </div>`;
+
+    // Charger données réelles
+    let user  = AuthService.getUser() || {};
+    let stats = { likes_received: 0, matches_count: 0 };
+    let photos = [];
+
+    try {
+      const [meRes, statsRes, photosRes] = await Promise.allSettled([
+        API.get('/me'),
+        API.get('/me/stats'),
+        API.get('/me/photos'),
+      ]);
+      if (meRes.status === 'fulfilled' && meRes.value?.data) {
+        user = meRes.value.data;
+        AuthService.updateUser(user);
+      }
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        stats = statsRes.value.data;
+      }
+      if (photosRes.status === 'fulfilled' && photosRes.value?.data) {
+        photos = photosRes.value.data;
+      }
+    } catch(e) { console.log('Profile load error:', e); }
+
+    const completion = calcCompletion(user, photos);
+    const mainPhoto  = photos.find(p => p.is_main);
+    const avatarHtml = mainPhoto
+      ? `<img src="${mainPhoto.url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : `<span style="font-size:48px;">👤</span>`;
+
+    page.innerHTML = `
+      <div class="page-header">
+        <div class="page-header-title">Mon Profil</div>
+        <button class="header-btn" onclick="App.navigate('settings');SettingsPage.render()">⚙️</button>
+      </div>
+
       <div style="padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:16px;">
 
-        <!-- Avatar avec upload -->
+        <!-- Avatar -->
         <div style="position:relative;width:100px;height:100px;cursor:pointer;" onclick="ProfilePage.triggerPhotoUpload()">
-          <div id="profile-avatar" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;font-size:48px;border:3px solid rgba(232,49,122,0.4);">
-            👤
+          <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(232,49,122,0.4);">
+            ${avatarHtml}
           </div>
-          <div style="position:absolute;bottom:0;right:0;width:30px;height:30px;background:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--dark);">
-            📷
-          </div>
+          <div style="position:absolute;bottom:0;right:0;width:30px;height:30px;background:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--dark);">📷</div>
         </div>
         <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="ProfilePage.uploadPhoto(this)">
 
+        <!-- Nom + statut -->
         <div style="text-align:center;">
-          <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">${Utils.escapeHtml(user.first_name)}</h2>
-          <p style="font-size:14px;color:var(--muted);margin-top:4px;">${flag(user.country_code || 'FR')} · ${user.is_premium?'<span style="color:var(--gold);">⭐ Premium</span>':'Gratuit'}</p>
+          <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">
+            ${Utils.escapeHtml(user.first_name || 'Utilisateur')}
+            ${user.is_verified ? '<span style="font-size:16px;">✅</span>' : ''}
+          </h2>
+          <p style="font-size:14px;color:var(--muted);margin-top:4px;">
+            ${FLAG(user.country_code)} ${user.city || ''}
+            ${user.city && user.country_code ? '·' : ''}
+            ${user.is_premium
+              ? '<span style="color:var(--gold);">⭐ Premium</span>'
+              : '<span>Compte Gratuit</span>'}
+          </p>
         </div>
 
+        <!-- Stats réelles -->
         <div class="stat-cards" style="width:100%;">
-          <div class="stat-card"><div class="stat-card-n" id="stat-likes">0</div><div class="stat-card-l">Likes reçus</div></div>
-          <div class="stat-card"><div class="stat-card-n" id="stat-matchs">0</div><div class="stat-card-l">Matchs</div></div>
-          <div class="stat-card"><div class="stat-card-n">${user.coins||0}</div><div class="stat-card-l">Coins</div></div>
+          <div class="stat-card">
+            <div class="stat-card-n">${stats.likes_received || 0}</div>
+            <div class="stat-card-l">Likes reçus</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-n">${stats.matches_count || 0}</div>
+            <div class="stat-card-l">Matchs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-n">${stats.profile_views || 0}</div>
+            <div class="stat-card-l">Vues</div>
+          </div>
         </div>
 
-        <!-- Mes photos -->
+        <!-- Photos -->
         <div style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:600;">Mes photos</span>
-            <button onclick="ProfilePage.triggerPhotoUpload()" style="background:var(--pink);border:none;color:white;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;">+ Ajouter</button>
+            <span style="font-size:14px;font-weight:600;">Mes photos <span style="color:var(--muted);font-weight:400;">(${photos.length}/6)</span></span>
+            ${photos.length < 6
+              ? `<button onclick="ProfilePage.triggerPhotoUpload()" style="background:var(--pink);border:none;color:white;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;">+ Ajouter</button>`
+              : ''}
           </div>
           <div id="photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-            <div style="aspect-ratio:1;background:rgba(255,255,255,0.05);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;" onclick="ProfilePage.triggerPhotoUpload()">+</div>
+            ${renderPhotosGrid(photos)}
           </div>
         </div>
 
-        <!-- Complétion -->
+        <!-- Complétion du profil -->
         <div style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="font-size:14px;font-weight:500;">Complétion du profil</span>
-            <span style="font-size:14px;color:var(--pink);font-weight:600;" id="completion-pct">30%</span>
+            <span style="font-size:14px;color:${completion>=70?'var(--green)':'var(--pink)'};font-weight:700;">${completion}%</span>
           </div>
-          <div class="progress-bar"><div class="progress-bar-fill" id="completion-bar" style="width:30%;"></div></div>
-          <p style="font-size:12px;color:var(--muted);margin-top:8px;">Ajoutez des photos pour augmenter vos matchs de 3x</p>
+          <div class="progress-bar">
+            <div class="progress-bar-fill" style="width:${completion}%;background:${completion>=70?'var(--green)':'var(--pink)'};"></div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+            ${completion < 50  ? '📸 Ajoutez des photos pour 3x plus de matchs !'
+            : completion < 80  ? '✍️ Complétez votre bio pour vous démarquer'
+            : '🎉 Profil bien complété — continuez à liker !'}
+          </p>
         </div>
 
-        <!-- Premium banner -->
+        <!-- Banner Premium -->
         ${!user.is_premium ? `
-          <div onclick="PricingPage.show()" style="width:100%;background:linear-gradient(135deg,rgba(232,49,122,0.15),rgba(196,31,101,0.08));border:1px solid rgba(232,49,122,0.3);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;">
+          <div onclick="App.navigate('pricing')" style="width:100%;background:linear-gradient(135deg,rgba(232,49,122,0.15),rgba(196,31,101,0.08));border:1px solid rgba(232,49,122,0.3);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;">
             <span style="font-size:28px;">⭐</span>
-            <div><div style="font-size:15px;font-weight:600;">Passer Premium</div><div style="font-size:12px;color:var(--muted);">Accès à toutes les fonctionnalités</div></div>
-            <span style="color:var(--pink);margin-left:auto;">→</span>
-          </div>` : ''}
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:600;">Passer Premium</div>
+              <div style="font-size:12px;color:var(--muted);">Messages illimités · Voir qui vous a liké · Appels vidéo</div>
+            </div>
+            <span style="color:var(--pink);">›</span>
+          </div>` : `
+          <div style="width:100%;background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(160,120,48,0.08));border:1px solid rgba(201,168,76,0.3);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:28px;">⭐</span>
+            <div>
+              <div style="font-size:15px;font-weight:600;color:var(--gold);">Compte Premium actif</div>
+              <div style="font-size:12px;color:var(--muted);">Toutes les fonctionnalités débloquées</div>
+            </div>
+          </div>`}
       </div>
 
-      <!-- Menu -->
-      <div style="padding:0 16px 24px;display:flex;flex-direction:column;gap:2px;">
-        ${[
-          {icon:'✍️', label:'Modifier ma bio',     sub:'Partagez votre histoire',       fn:'ProfilePage.editBio()'},
-          {icon:'🤳', label:'Vérifier mon profil', sub:'Obtenez le badge ✅ certifié', fn:'Toast.info(\'Vérification bientôt disponible\')'},
-          {icon:'🎯', label:'Mes préférences',     sub:'Qui je recherche',              fn:'Toast.info(\'Préférences bientôt disponibles\')'},
-          {icon:'⚙️', label:'Paramètres',          sub:'Confidentialité, notifications',fn:'App.navigate(\'settings\');SettingsPage.render()'},
-          {icon:'🚪', label:'Déconnexion',         sub:'',                              fn:'AuthService.logout()', red:true},
-        ].map(r=>`
-          <div class="settings-row" onclick="${r.fn}">
-            <span class="settings-icon">${r.icon}</span>
-            <div class="settings-text"><span ${r.red?'style="color:var(--red);"':''}>${r.label}</span>${r.sub?`<small>${r.sub}</small>`:''}</div>
-            <span class="settings-arrow">›</span>
-          </div>`).join('')}
+      <!-- Menu actions -->
+      <div style="padding:0 16px 40px;display:flex;flex-direction:column;gap:2px;">
+        <div class="settings-row" onclick="ProfilePage.editProfile()">
+          <span class="settings-icon">✍️</span>
+          <div class="settings-text"><span>Modifier mon profil</span><small>Nom, bio, profession, langues</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="ProfilePage.editPreferences()">
+          <span class="settings-icon">🎯</span>
+          <div class="settings-text"><span>Mes préférences</span><small>Âge, distance, genre recherché</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="ProfilePage.requestVerification()">
+          <span class="settings-icon">🤳</span>
+          <div class="settings-text"><span>Vérifier mon profil</span><small>${user.is_verified ? '✅ Déjà vérifié' : 'Obtenez le badge certifié'}</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="App.navigate('settings');SettingsPage.render()">
+          <span class="settings-icon">⚙️</span>
+          <div class="settings-text"><span>Paramètres</span><small>Confidentialité, notifications, sécurité</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="ProfilePage.confirmLogout()">
+          <span class="settings-icon">🚪</span>
+          <div class="settings-text"><span style="color:var(--red);">Déconnexion</span></div>
+          <span class="settings-arrow">›</span>
+        </div>
       </div>
     `;
-
-    // Charger les photos existantes
-    loadPhotos();
   }
 
-  async function loadPhotos() {
-    try {
-      const res = await API.get('/me/photos');
-      const photos = res.data || [];
-      const grid = document.getElementById('photos-grid');
-      if (!grid) return;
+  function renderPhotosGrid(photos) {
+    let html = photos.map(p => `
+      <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
+        <img src="${p.url_thumb || p.url}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.4),transparent);opacity:0;transition:opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0"></div>
+        <button onclick="ProfilePage.deletePhoto(${p.id})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);border:none;color:white;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">✕</button>
+        ${p.is_main ? '<div style="position:absolute;bottom:4px;left:4px;background:var(--pink);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">Principale</div>' : `<button onclick="ProfilePage.setMainPhoto(${p.id})" style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:9px;padding:2px 6px;border-radius:10px;cursor:pointer;">Mettre en avant</button>`}
+      </div>`).join('');
 
-      grid.innerHTML = photos.map(p => `
-        <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;">
-          <img src="${p.url_thumb || p.url}" style="width:100%;height:100%;object-fit:cover;">
-          <button onclick="ProfilePage.deletePhoto(${p.id})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:white;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;">✕</button>
-          ${p.is_main ? '<div style="position:absolute;bottom:4px;left:4px;background:var(--pink);color:white;font-size:9px;padding:2px 6px;border-radius:10px;">Principale</div>' : ''}
-        </div>
-      `).join('') + `
-        ${photos.length < 6 ? `<div style="aspect-ratio:1;background:rgba(255,255,255,0.05);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;" onclick="ProfilePage.triggerPhotoUpload()">+</div>` : ''}
-      `;
-
-      // Mettre à jour la complétion
-      const pct = Math.min(30 + photos.length * 10, 100);
-      const pctEl = document.getElementById('completion-pct');
-      const barEl = document.getElementById('completion-bar');
-      if (pctEl) pctEl.textContent = pct + '%';
-      if (barEl) barEl.style.width = pct + '%';
-
-      // Mettre à jour l'avatar principal
-      const main = photos.find(p => p.is_main);
-      if (main) {
-        const av = document.getElementById('profile-avatar');
-        if (av) av.innerHTML = `<img src="${main.url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-      }
-    } catch(e) {
-      console.log('Photos:', e.message);
+    if (photos.length < 6) {
+      html += `<div onclick="ProfilePage.triggerPhotoUpload()" style="aspect-ratio:1;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.12);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.borderColor='var(--pink)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.12)'">
+        <span style="font-size:24px;color:var(--muted);">+</span>
+        <span style="font-size:10px;color:var(--muted);">Ajouter</span>
+      </div>`;
     }
+    return html;
   }
 
   return {
@@ -132,131 +224,371 @@ const ProfilePage = (() => {
     async uploadPhoto(input) {
       const file = input.files[0];
       if (!file) return;
-
-      if (file.size > 10 * 1024 * 1024) { Toast.error('Photo trop lourde (max 10Mo)'); return; }
-
+      if (file.size > 10 * 1024 * 1024) { Toast.error('Photo trop lourde (max 10 Mo)'); return; }
       Toast.info('Upload en cours... ⏳');
-
-      const formData = new FormData();
-      formData.append('photo', file);
-
       try {
-        const res = await API.upload('/me/photos', formData);
-        Toast.success('Photo ajoutée ! ✅');
-        loadPhotos();
+        const formData = new FormData();
+        formData.append('photo', file);
+        await API.upload('/me/photos', formData);
+        Toast.success('Photo ajoutée ✅');
+        render();
       } catch(err) {
-        Toast.error(err.message || 'Erreur lors de l\'upload');
+        Toast.error(err.message || 'Erreur lors du téléchargement');
       }
       input.value = '';
     },
 
     async deletePhoto(photoId) {
-      if (!confirm('Supprimer cette photo ?')) return;
+      Modal.show(`
+        <div style="text-align:center;padding:8px;">
+          <div style="font-size:40px;margin-bottom:12px;">🗑️</div>
+          <p style="margin-bottom:20px;color:var(--muted);">Supprimer cette photo définitivement ?</p>
+          <div style="display:flex;gap:10px;">
+            <button onclick="Modal.close()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:'Outfit',sans-serif;">Annuler</button>
+            <button onclick="ProfilePage._doDeletePhoto(${photoId})" style="flex:1;background:var(--red);border:none;color:white;padding:12px;border-radius:50px;cursor:pointer;font-weight:700;font-family:'Outfit',sans-serif;">Supprimer</button>
+          </div>
+        </div>`, '');
+    },
+
+    async _doDeletePhoto(photoId) {
+      Modal.close();
       try {
         await API.delete(`/me/photos/${photoId}`);
         Toast.success('Photo supprimée');
-        loadPhotos();
-      } catch(err) {
-        Toast.error(err.message || 'Erreur');
-      }
-    },
-
-    editBio() {
-      Modal.show(`
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="input-group">
-            <label class="input-label">Votre bio</label>
-            <textarea id="bio-input" class="input-field" rows="4" placeholder="Parlez de vous..." style="resize:none;"></textarea>
-          </div>
-          <div class="input-group">
-            <label class="input-label">Profession</label>
-            <input id="prof-input" type="text" class="input-field" placeholder="Ex: Ingénieur, Médecin...">
-          </div>
-          <button class="btn btn-primary btn-full" onclick="ProfilePage.saveBio()">Sauvegarder</button>
-        </div>
-      `, '✍️ Ma bio');
-    },
-
-    async saveBio() {
-      const bio  = document.getElementById('bio-input')?.value.trim();
-      const prof = document.getElementById('prof-input')?.value.trim();
-      try {
-        await API.put('/me', { bio, profession: prof });
-        Toast.success('Profil mis à jour ✅');
-        Modal.close();
         render();
       } catch(err) {
         Toast.error(err.message || 'Erreur');
       }
     },
 
-    showPremium() {
+    async setMainPhoto(photoId) {
+      try {
+        await API.put(`/me/photos/${photoId}/main`, {});
+        Toast.success('Photo principale mise à jour ✅');
+        render();
+      } catch(err) {
+        Toast.error(err.message || 'Erreur');
+      }
+    },
+
+    editProfile() {
+      const user = AuthService.getUser() || {};
       Modal.show(`
-        <div style="text-align:center;padding-bottom:8px;">
-          <div style="font-size:48px;margin-bottom:12px;">⭐</div>
-          <h3 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:8px;">Passez Premium</h3>
-          <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">Débloquez toutes les fonctionnalités Mixte-Meet</p>
-          <div style="display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:24px;">
-            ${['Super Likes illimités','Appels vidéo HD','Traduction automatique','Mode Incognito','Voir qui vous a liké','Undo (annuler un swipe)'].map(f=>`
-              <div style="display:flex;gap:10px;align-items:center;">
-                <span style="color:var(--pink);font-weight:700;">✓</span>
-                <span style="font-size:14px;">${f}</span>
-              </div>`).join('')}
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="input-group">
+            <label class="input-label">Prénom</label>
+            <input id="edit-firstname" type="text" class="input-field" value="${Utils.escapeHtml(user.first_name || '')}" placeholder="Votre prénom">
           </div>
-          <button class="btn btn-primary btn-full" onclick="Modal.close();PricingPage.show()">
-            Essayer 3 jours gratuits
+          <div class="input-group">
+            <label class="input-label">Profession</label>
+            <input id="edit-profession" type="text" class="input-field" value="${Utils.escapeHtml(user.profession || '')}" placeholder="Ex: Ingénieur, Médecin...">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Ville</label>
+            <input id="edit-city" type="text" class="input-field" value="${Utils.escapeHtml(user.city || '')}" placeholder="Votre ville">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Bio</label>
+            <textarea id="edit-bio" class="input-field" rows="4" placeholder="Partagez votre histoire, vos passions..." style="resize:none;">${Utils.escapeHtml(user.bio || '')}</textarea>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Langues parlées</label>
+            <input id="edit-languages" type="text" class="input-field" value="${Utils.escapeHtml((user.languages || []).join(', '))}" placeholder="Français, Anglais, Wolof...">
+          </div>
+          <button onclick="ProfilePage.saveProfile()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:15px;">
+            Sauvegarder ✅
           </button>
-          <p style="font-size:11px;color:var(--muted);margin-top:10px;">Puis 9 900 CFA/mois · Annulable à tout moment</p>
-        </div>
-      `, '');
+        </div>`, '✍️ Mon profil');
+    },
+
+    async saveProfile() {
+      const payload = {
+        first_name: document.getElementById('edit-firstname')?.value.trim(),
+        profession: document.getElementById('edit-profession')?.value.trim(),
+        city:       document.getElementById('edit-city')?.value.trim(),
+        bio:        document.getElementById('edit-bio')?.value.trim(),
+        languages:  document.getElementById('edit-languages')?.value.split(',').map(l => l.trim()).filter(Boolean),
+      };
+      try {
+        const res = await API.put('/me', payload);
+        if (res?.data) AuthService.updateUser(res.data);
+        Toast.success('Profil mis à jour ✅');
+        Modal.close();
+        render();
+      } catch(err) {
+        Toast.error(err.message || 'Erreur lors de la mise à jour');
+      }
+    },
+
+    editPreferences() {
+      const user = AuthService.getUser() || {};
+      const prefs = user.preferences || {};
+      Modal.show(`
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="input-group">
+            <label class="input-label">Je recherche</label>
+            <select id="pref-gender" class="input-field" style="background:var(--surface);">
+              <option value="female" ${prefs.gender === 'female' ? 'selected' : ''}>Des femmes</option>
+              <option value="male"   ${prefs.gender === 'male'   ? 'selected' : ''}>Des hommes</option>
+              <option value="both"   ${prefs.gender === 'both'   ? 'selected' : ''}>Les deux</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Âge minimum : <span id="lbl-min">${prefs.age_min || 18}</span> ans</label>
+            <input type="range" min="18" max="65" value="${prefs.age_min || 18}" style="width:100%;" oninput="document.getElementById('lbl-min').textContent=this.value" id="pref-age-min">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Âge maximum : <span id="lbl-max">${prefs.age_max || 50}</span> ans</label>
+            <input type="range" min="18" max="70" value="${prefs.age_max || 50}" style="width:100%;" oninput="document.getElementById('lbl-max').textContent=this.value" id="pref-age-max">
+          </div>
+          <button onclick="ProfilePage.savePreferences()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">
+            Sauvegarder ✅
+          </button>
+        </div>`, '🎯 Mes préférences');
+    },
+
+    async savePreferences() {
+      const payload = {
+        preferences: {
+          gender:  document.getElementById('pref-gender')?.value,
+          age_min: parseInt(document.getElementById('pref-age-min')?.value),
+          age_max: parseInt(document.getElementById('pref-age-max')?.value),
+        }
+      };
+      try {
+        await API.put('/me', payload);
+        Toast.success('Préférences sauvegardées ✅');
+        Modal.close();
+      } catch(err) {
+        Toast.error(err.message || 'Erreur');
+      }
+    },
+
+    requestVerification() {
+      const user = AuthService.getUser() || {};
+      if (user.is_verified) { Toast.info('Votre profil est déjà vérifié ✅'); return; }
+      Modal.show(`
+        <div style="text-align:center;padding:8px;">
+          <div style="font-size:48px;margin-bottom:12px;">🤳</div>
+          <h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;">Vérification de profil</h3>
+          <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Prenez un selfie avec le geste indiqué pour obtenir le badge ✅ certifié et inspirer confiance.</p>
+          <button onclick="Modal.close();Toast.info('Vérification bientôt disponible — revenez dans quelques jours !')" style="background:var(--pink);border:none;color:white;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;width:100%;">
+            Commencer la vérification
+          </button>
+        </div>`, '');
+    },
+
+    confirmLogout() {
+      Modal.show(`
+        <div style="text-align:center;padding:8px;">
+          <div style="font-size:40px;margin-bottom:12px;">🚪</div>
+          <p style="margin-bottom:20px;color:var(--muted);">Voulez-vous vraiment vous déconnecter ?</p>
+          <div style="display:flex;gap:10px;">
+            <button onclick="Modal.close()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:'Outfit',sans-serif;">Annuler</button>
+            <button onclick="Modal.close();AuthService.logout()" style="flex:1;background:var(--red);border:none;color:white;padding:12px;border-radius:50px;cursor:pointer;font-weight:700;font-family:'Outfit',sans-serif;">Déconnexion</button>
+          </div>
+        </div>`, '');
     },
   };
 })();
 
+// ── Settings Page ─────────────────────────────────────────────────────────────
 const SettingsPage = {
   render() {
+    const user = AuthService.getUser() || {};
     document.getElementById('page-settings').innerHTML = `
       <div class="page-header">
         <button class="header-btn" onclick="App.navigate('profile')">←</button>
         <div class="page-header-title">Paramètres</div>
       </div>
-      <div style="padding:12px 8px 40px;">
-        ${[
-          {label:'Compte', items:[
-            {icon:'✉️', l:'Email',               s: AuthService.getUser()?.email || ''},
-            {icon:'🔐', l:'Double auth. (2FA)',  s:'SMS de vérification'},
-            {icon:'🔒', l:'Mot de passe',        s:''},
-          ]},
-          {label:'Confidentialité', items:[
-            {icon:'👀', l:'Mode Incognito',      s:'Visible uniquement si vous likez'},
-            {icon:'📍', l:'Afficher ma ville',   s:'Dans les résultats de recherche'},
-          ]},
-          {label:'Notifications', items:[
-            {icon:'💞', l:'Nouveaux matchs',     s:''},
-            {icon:'💬', l:'Nouveaux messages',   s:''},
-          ]},
-          {label:'Support', items:[
-            {icon:'❓', l:'Centre d\'aide',      s:''},
-            {icon:'🚨', l:'Signaler un problème',s:''},
-            {icon:'📦', l:'Exporter mes données (RGPD)', s:''},
-          ]},
-        ].map(section => `
-          <div style="padding:16px 8px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);">${section.label}</div>
-          ${section.items.map(r => `
-            <div class="settings-row" onclick="Toast.info('${r.l}')">
-              <span class="settings-icon">${r.icon}</span>
-              <div class="settings-text"><span>${r.l}</span>${r.s ? `<small>${r.s}</small>` : ''}</div>
-              <span class="settings-arrow">›</span>
-            </div>`).join('')}
-        `).join('')}
+      <div style="padding:12px 8px 60px;">
 
-        <div style="padding:16px 8px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--red);">Zone dangereuse</div>
-        <div class="settings-row" onclick="if(confirm('Supprimer définitivement votre compte ?'))AuthService.logout()">
-          <span class="settings-icon">🗑️</span>
-          <div class="settings-text"><span style="color:var(--red);">Supprimer mon compte</span></div>
+        <!-- Compte -->
+        <div style="padding:16px 8px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);">Compte</div>
+        <div class="settings-row" onclick="SettingsPage.changeEmail()">
+          <span class="settings-icon">✉️</span>
+          <div class="settings-text"><span>Email</span><small>${Utils.escapeHtml(user.email || '')}</small></div>
+          <span class="settings-arrow">›</span>
         </div>
-        <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.2);margin-top:24px;">Mixte-Meet v1.0.0 · L'amour sans frontières 🦋</p>
+        <div class="settings-row" onclick="SettingsPage.changePassword()">
+          <span class="settings-icon">🔒</span>
+          <div class="settings-text"><span>Changer le mot de passe</span></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="Toast.info('Vérification 2FA bientôt disponible')">
+          <span class="settings-icon">🔐</span>
+          <div class="settings-text"><span>Double authentification</span><small>Sécurisez votre compte</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+
+        <!-- Confidentialité -->
+        <div style="padding:16px 8px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);">Confidentialité</div>
+        <div class="settings-row" onclick="Toast.info('Mode Incognito — fonctionnalité Premium ⭐')">
+          <span class="settings-icon">👀</span>
+          <div class="settings-text"><span>Mode Incognito</span><small>Visible uniquement si vous likez</small></div>
+          <span style="background:var(--gold);color:black;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;">PRO</span>
+        </div>
+        <div class="settings-row" onclick="Toast.info('Paramètre de localisation mis à jour')">
+          <span class="settings-icon">📍</span>
+          <div class="settings-text"><span>Afficher ma ville</span><small>Dans les résultats de recherche</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="Toast.info('Qui peut vous voir — bientôt')">
+          <span class="settings-icon">🌍</span>
+          <div class="settings-text"><span>Visibilité du profil</span><small>Tout le monde</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+
+        <!-- Notifications -->
+        <div style="padding:16px 8px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);">Notifications</div>
+        <div class="settings-row">
+          <span class="settings-icon">💞</span>
+          <div class="settings-text" style="flex:1;"><span>Nouveaux matchs</span></div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" checked style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;inset:0;background:var(--pink);border-radius:24px;"></span>
+            <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:white;border-radius:50%;transition:0.2s;transform:translateX(20px);"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <span class="settings-icon">💬</span>
+          <div class="settings-text" style="flex:1;"><span>Nouveaux messages</span></div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" checked style="opacity:0;width:0;height:0;">
+            <span style="position:absolute;inset:0;background:var(--pink);border-radius:24px;"></span>
+            <span style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:white;border-radius:50%;transition:0.2s;transform:translateX(20px);"></span>
+          </label>
+        </div>
+
+        <!-- Support -->
+        <div style="padding:16px 8px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);">Support</div>
+        <div class="settings-row" onclick="window.open('mailto:support@mixte-meet.fr')">
+          <span class="settings-icon">❓</span>
+          <div class="settings-text"><span>Contacter le support</span><small>support@mixte-meet.fr</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+        <div class="settings-row" onclick="SettingsPage.exportData()">
+          <span class="settings-icon">📦</span>
+          <div class="settings-text"><span>Exporter mes données</span><small>Conformité RGPD</small></div>
+          <span class="settings-arrow">›</span>
+        </div>
+
+        <!-- Zone dangereuse -->
+        <div style="padding:16px 8px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--red);">Zone dangereuse</div>
+        <div class="settings-row" onclick="SettingsPage.confirmDeleteAccount()">
+          <span class="settings-icon">🗑️</span>
+          <div class="settings-text"><span style="color:var(--red);">Supprimer mon compte</span><small style="color:rgba(239,68,68,0.6);">Action irréversible</small></div>
+          <span class="settings-arrow" style="color:var(--red);">›</span>
+        </div>
+
+        <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.15);margin-top:32px;padding-bottom:16px;">
+          Mixte-Meet v1.0.0 · L'amour sans frontières 🦋<br>
+          <span style="color:rgba(255,255,255,0.1);">© 2026 Mixte-Meet — Tous droits réservés</span>
+        </p>
       </div>
     `;
-  }
+  },
+
+  changeEmail() {
+    Modal.show(`
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="input-group">
+          <label class="input-label">Nouvel email</label>
+          <input id="new-email" type="email" class="input-field" placeholder="votre@email.com">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Mot de passe actuel</label>
+          <input id="email-pwd" type="password" class="input-field" placeholder="Confirmez votre mot de passe">
+        </div>
+        <button onclick="SettingsPage._doChangeEmail()" style="background:var(--pink);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">Mettre à jour</button>
+      </div>`, '✉️ Changer l\'email');
+  },
+
+  async _doChangeEmail() {
+    const email = document.getElementById('new-email')?.value.trim();
+    const password = document.getElementById('email-pwd')?.value;
+    if (!email || !password) { Toast.error('Remplissez tous les champs'); return; }
+    try {
+      await API.put('/me/email', { email, password });
+      Toast.success('Email mis à jour ✅');
+      Modal.close();
+    } catch(err) {
+      Toast.error(err.message || 'Erreur');
+    }
+  },
+
+  changePassword() {
+    Modal.show(`
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="input-group">
+          <label class="input-label">Mot de passe actuel</label>
+          <input id="old-pwd" type="password" class="input-field" placeholder="••••••••">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Nouveau mot de passe</label>
+          <input id="new-pwd" type="password" class="input-field" placeholder="Min. 8 caractères">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Confirmer</label>
+          <input id="confirm-pwd" type="password" class="input-field" placeholder="Répétez le mot de passe">
+        </div>
+        <button onclick="SettingsPage._doChangePassword()" style="background:var(--pink);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">Modifier</button>
+      </div>`, '🔒 Mot de passe');
+  },
+
+  async _doChangePassword() {
+    const oldPwd  = document.getElementById('old-pwd')?.value;
+    const newPwd  = document.getElementById('new-pwd')?.value;
+    const confirm = document.getElementById('confirm-pwd')?.value;
+    if (!oldPwd || !newPwd) { Toast.error('Remplissez tous les champs'); return; }
+    if (newPwd !== confirm) { Toast.error('Les mots de passe ne correspondent pas'); return; }
+    if (newPwd.length < 8)  { Toast.error('Minimum 8 caractères'); return; }
+    try {
+      await API.put('/me/password', { old_password: oldPwd, new_password: newPwd });
+      Toast.success('Mot de passe modifié ✅');
+      Modal.close();
+    } catch(err) {
+      Toast.error(err.message || 'Erreur');
+    }
+  },
+
+  async exportData() {
+    Toast.info('Préparation de vos données... ⏳');
+    try {
+      await API.post('/me/export', {});
+      Toast.success('Vous recevrez vos données par email sous 48h ✅');
+    } catch {
+      Toast.info('Export RGPD disponible prochainement');
+    }
+  },
+
+  confirmDeleteAccount() {
+    Modal.show(`
+      <div style="text-align:center;padding:8px;">
+        <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;color:var(--red);">Supprimer mon compte</h3>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:8px;">Cette action est <strong style="color:white;">irréversible</strong>. Toutes vos données, matchs et conversations seront définitivement supprimés.</p>
+        <div class="input-group" style="margin-bottom:16px;">
+          <input id="delete-confirm" type="text" class="input-field" placeholder='Tapez "SUPPRIMER" pour confirmer'>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="Modal.close()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:'Outfit',sans-serif;">Annuler</button>
+          <button onclick="SettingsPage._doDeleteAccount()" style="flex:1;background:var(--red);border:none;color:white;padding:12px;border-radius:50px;cursor:pointer;font-weight:700;font-family:'Outfit',sans-serif;">Supprimer</button>
+        </div>
+      </div>`, '');
+  },
+
+  async _doDeleteAccount() {
+    const val = document.getElementById('delete-confirm')?.value;
+    if (val !== 'SUPPRIMER') { Toast.error('Tapez exactement "SUPPRIMER" pour confirmer'); return; }
+    try {
+      await API.delete('/me');
+      Modal.close();
+      AuthService.clear();
+      App.showAuth();
+      Toast.info('Votre compte a été supprimé.');
+    } catch(err) {
+      Toast.error(err.message || 'Erreur lors de la suppression');
+    }
+  },
 };
