@@ -4,21 +4,22 @@ const ChatPage = (() => {
   let messages = [];
   let pollingInterval = null;
 
-  // Messages démo de secours (si profil démo ou API indisponible)
   const DEMO_MSGS = {
     1: [
-      { id:1, sent:false, content:'Bonjour ! Je suis ravie de notre match 😊', time:'10:00' },
-      { id:2, sent:true,  content:"Bonjour ! Moi aussi, tu habites à Abidjan ?", time:'10:01' },
-      { id:3, sent:false, content:"Oui ! Et toi tu viens d'où ?", time:'10:02' },
-      { id:4, sent:true,  content:"Je suis à Paris. J'ai toujours rêvé de visiter la Côte d'Ivoire 🇨🇮", time:'10:03' },
-      { id:5, sent:false, content:'Il faut venir ! Je pourrais te faire visiter 😄🌴', time:'10:05' },
+      { id:1, sent:false, content:'Bonjour ! Je suis ravie de notre match !', time:'10:00' },
+      { id:2, sent:true,  content:'Bonjour ! Moi aussi, tu habites a Abidjan ?', time:'10:01' },
+      { id:3, sent:false, content:"Oui ! Et toi tu viens d'ou ?", time:'10:02' },
+      { id:4, sent:true,  content:"Je suis a Paris. J'ai toujours reve de visiter la Cote d'Ivoire", time:'10:03' },
+      { id:5, sent:false, content:'Il faut venir ! Je pourrais te faire visiter !', time:'10:05' },
     ],
   };
 
-  const DEMO_REPLIES = ["😊 C'est super !", 'Vraiment ?', "J'adore ça !", 'Raconte-moi plus 🌍', 'Haha oui !', '🦋'];
+  const DEMO_REPLIES = ["Super !", 'Vraiment ?', "J'adore ca !", 'Raconte-moi plus', 'Haha oui !', 'C est cool !'];
 
   function isDemo() {
-    return !currentMatch || !currentMatch.uuid || currentMatch.uuid.startsWith('m') && currentMatch.uuid.length <= 3;
+    if (!currentMatch || !currentMatch.uuid) return true;
+    const uid = String(currentMatch.uuid);
+    return uid === 'm1' || uid === 'm2' || uid === 'm3' || uid === 'm4';
   }
 
   function open(match) {
@@ -32,16 +33,13 @@ const ChatPage = (() => {
 
   async function loadMessages() {
     if (isDemo()) {
-      // Profil démo → messages fictifs
-      const demoMsgs = DEMO_MSGS[currentMatch.conversation_id] || [];
-      messages = demoMsgs;
+      messages = DEMO_MSGS[currentMatch.conversation_id] || [];
       renderMessages();
       return;
     }
-
     try {
       const convId = currentMatch.conversation_id || currentMatch.id;
-      const data = await API.get(`/conversations/${convId}/messages`);
+      const data = await API.get('/conversations/' + convId + '/messages');
       const myUuid = AuthService.getUser()?.uuid;
       messages = (data?.data || []).map(msg => ({
         id: msg.id,
@@ -50,11 +48,9 @@ const ChatPage = (() => {
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
       renderMessages();
-      // Polling toutes les 5 secondes pour nouveaux messages
       startPolling();
     } catch(e) {
       console.log('Messages API error:', e);
-      // Fallback démo si erreur
       messages = DEMO_MSGS[currentMatch.conversation_id] || [];
       renderMessages();
     }
@@ -66,7 +62,7 @@ const ChatPage = (() => {
       if (!currentMatch || isDemo()) return;
       try {
         const convId = currentMatch.conversation_id || currentMatch.id;
-        const data = await API.get(`/conversations/${convId}/messages`);
+        const data = await API.get('/conversations/' + convId + '/messages');
         const myUuid = AuthService.getUser()?.uuid;
         const newMsgs = (data?.data || []).map(msg => ({
           id: msg.id,
@@ -78,7 +74,7 @@ const ChatPage = (() => {
           messages = newMsgs;
           renderMessages();
         }
-      } catch(e) { /* silencieux */ }
+      } catch(e) {}
     }, 5000);
   }
 
@@ -88,37 +84,29 @@ const ChatPage = (() => {
 
   function render() {
     if (!currentMatch) return;
-    document.getElementById('page-chat').innerHTML = `
-      <div style="height:100%;display:flex;flex-direction:column;">
-        <div class="page-header">
-          <button class="header-btn" onclick="ChatPage.close()">←</button>
-          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;font-size:22px;margin-right:4px;overflow:hidden;">
-            ${currentMatch.main_photo
-              ? `<img src="${currentMatch.main_photo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.outerHTML='${currentMatch.emoji || '👤'}'">` 
-              : (currentMatch.emoji || '👤')}
-          </div>
-          <div style="flex:1;">
-            <div style="font-size:15px;font-weight:600;">${currentMatch.first_name}</div>
-            <div style="font-size:11px;color:${currentMatch.online ? 'var(--green)' : 'var(--muted)'};">${currentMatch.online ? '● En ligne' : 'Hors ligne'}</div>
-          </div>
-          <button class="header-btn" onclick="Toast.info('Appel vidéo — Premium 🔒')">📹</button>
-          <button class="header-btn" onclick="ChatPage.showOptions()">⋯</button>
-        </div>
-
-        <div class="chat-messages" id="chat-messages">
-          <div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">🦋 Vous vous êtes matchés ! Dites bonjour.</div>
-          <div id="messages-list"></div>
-          <div id="typing-zone"></div>
-        </div>
-
-        <div class="chat-input-bar">
-          <button class="header-btn" onclick="Toast.info('Cadeaux — Premium 🔒')">🎁</button>
-          <textarea class="chat-input-field" id="msg-input" placeholder="Votre message..." rows="1"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ChatPage.send();}"></textarea>
-          <button class="chat-send-btn" onclick="ChatPage.send()">➤</button>
-        </div>
-      </div>
-    `;
+    const avatar = currentMatch.emoji || '👤';
+    document.getElementById('page-chat').innerHTML =
+      '<div style="height:100%;display:flex;flex-direction:column;">' +
+        '<div class="page-header">' +
+          '<button class="header-btn" onclick="ChatPage.close()">&#8592;</button>' +
+          '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;font-size:22px;margin-right:4px;">' + avatar + '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="font-size:15px;font-weight:600;">' + currentMatch.first_name + '</div>' +
+            '<div style="font-size:11px;color:' + (currentMatch.online ? 'var(--green)' : 'var(--muted)') + ';">' + (currentMatch.online ? '&#9679; En ligne' : 'Hors ligne') + '</div>' +
+          '</div>' +
+          '<button class="header-btn" onclick="ChatPage.showOptions()">&#8943;</button>' +
+        '</div>' +
+        '<div class="chat-messages" id="chat-messages">' +
+          '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">Vous vous etes matches ! Dites bonjour.</div>' +
+          '<div id="messages-list"></div>' +
+          '<div id="typing-zone"></div>' +
+        '</div>' +
+        '<div class="chat-input-bar">' +
+          '<button class="header-btn" onclick="Toast.info(\'Cadeaux - Premium\')">&#127873;</button>' +
+          '<textarea class="chat-input-field" id="msg-input" placeholder="Votre message..." rows="1" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();ChatPage.send();}"></textarea>' +
+          '<button class="chat-send-btn" onclick="ChatPage.send()">&#10148;</button>' +
+        '</div>' +
+      '</div>';
   }
 
   function renderMessages() {
@@ -131,13 +119,13 @@ const ChatPage = (() => {
 
   function renderMsg(msg) {
     const avatar = currentMatch ? (currentMatch.emoji || '👤') : '👤';
-    return `<div class="chat-message ${msg.sent ? 'sent' : 'recv'}">
-      ${!msg.sent ? `<div class="msg-avatar">${avatar}</div>` : ''}
-      <div>
-        <div class="msg-bubble">${Utils.escapeHtml(msg.content)}</div>
-        <div class="msg-time">${msg.time}</div>
-      </div>
-    </div>`;
+    return '<div class="chat-message ' + (msg.sent ? 'sent' : 'recv') + '">' +
+      (!msg.sent ? '<div class="msg-avatar">' + avatar + '</div>' : '') +
+      '<div>' +
+        '<div class="msg-bubble">' + (msg.content || '') + '</div>' +
+        '<div class="msg-time">' + msg.time + '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   function appendMsg(msg) {
@@ -154,35 +142,42 @@ const ChatPage = (() => {
 
   return {
     open,
+    render,
 
     close() {
       stopPolling();
       App.navigate('matches');
     },
 
-    render,
-
     async send() {
       const input = document.getElementById('msg-input');
       if (!input || !input.value.trim()) return;
       const text = input.value.trim();
-      input.value = '';
 
-    reload() { currentIdx=0; profiles=[]; loadProfiles(); },
-    openChat() {
-      const profile = profiles[currentIdx];
-      if (!profile) return;
-      ChatPage.open(profile);
-    },
+      // Limite 3 messages pour non-premium
+      const sentCount = messages.filter(function(m) { return m.sent; }).length;
+      const isPremium = AuthService.getUser()?.is_premium || false;
+      if (!isPremium && sentCount >= 3) {
+        Modal.show(
+          '<div style="text-align:center;padding:16px;">' +
+            '<div style="font-size:48px;margin-bottom:12px;">&#128274;</div>' +
+            '<h2 style="font-size:20px;margin-bottom:8px;">Limite atteinte</h2>' +
+            '<p style="color:var(--muted);font-size:14px;margin-bottom:20px;">Passez en <strong style="color:var(--gold);">Premium</strong> pour envoyer des messages illimites.</p>' +
+            '<button onclick="Modal.close();App.navigate(\'pricing\')" style="background:linear-gradient(135deg,var(--gold),#A07830);border:none;color:white;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px;">&#11088; Passer Premium</button>' +
+            '<button onclick="Modal.close()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;padding:10px 24px;border-radius:50px;cursor:pointer;width:100%;">Plus tard</button>' +
+          '</div>', '');
+        return;
+      }
+
+      input.value = '';
       const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
       const optimistic = { id: Date.now(), sent: true, content: text, time: now };
       appendMsg(optimistic);
 
       if (isDemo()) {
-        // Mode démo → réponse auto simulée
         const tz = document.getElementById('typing-zone');
-        if (tz) tz.innerHTML = `<div style="padding:8px 16px;color:var(--muted);font-size:12px;">● ${currentMatch.first_name} écrit...</div>`;
-        setTimeout(() => {
+        if (tz) tz.innerHTML = '<div style="padding:8px 16px;color:var(--muted);font-size:12px;">&#9679; ' + currentMatch.first_name + ' ecrit...</div>';
+        setTimeout(function() {
           if (tz) tz.innerHTML = '';
           const reply = {
             id: Date.now()+1,
@@ -193,32 +188,23 @@ const ChatPage = (() => {
           appendMsg(reply);
         }, 1200 + Math.random() * 800);
       } else {
-        // Mode réel → envoyer via API
         try {
           const convId = currentMatch.conversation_id || currentMatch.id;
-          await API.post(`/conversations/${convId}/messages`, { content: text });
-          // Le polling récupérera la confirmation et les réponses
+          await API.post('/conversations/' + convId + '/messages', { content: text });
         } catch(e) {
           console.log('Send error:', e);
-          Toast.error('Erreur envoi — vérifiez votre connexion');
+          Toast.error('Erreur envoi - verifiez votre connexion');
         }
       }
     },
 
     showOptions() {
-      Modal.show(`
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <div class="settings-row" onclick="Modal.close();Toast.info('Profil ouvert')">
-            <span class="settings-icon">👤</span><div class="settings-text"><span>Voir le profil</span></div>
-          </div>
-          <div class="settings-row" onclick="Modal.close();Toast.info('Utilisateur bloqué')">
-            <span class="settings-icon">🚫</span><div class="settings-text"><span>Bloquer</span></div>
-          </div>
-          <div class="settings-row" onclick="Modal.close();Toast.info('Utilisateur signalé')">
-            <span class="settings-icon">⚠️</span><div class="settings-text"><span>Signaler</span></div>
-          </div>
-        </div>`, 'Options');
+      Modal.show(
+        '<div style="display:flex;flex-direction:column;gap:4px;">' +
+          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Profil ouvert\')"><span class="settings-icon">&#128100;</span><div class="settings-text"><span>Voir le profil</span></div></div>' +
+          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Utilisateur bloque\')"><span class="settings-icon">&#128683;</span><div class="settings-text"><span>Bloquer</span></div></div>' +
+          '<div class="settings-row" onclick="Modal.close();Toast.info(\'Utilisateur signale\')"><span class="settings-icon">&#9888;</span><div class="settings-text"><span>Signaler</span></div></div>' +
+        '</div>', 'Options');
     },
   };
 })();
-
