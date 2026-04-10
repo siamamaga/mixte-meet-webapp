@@ -468,16 +468,6 @@ const ProfilePage = (() => {
         if (btn) { btn.disabled = false; btn.textContent = '✅ Envoyer'; }
       }
     },
-      Modal.show(`
-        <div style="text-align:center;padding:8px;">
-          <div style="font-size:48px;margin-bottom:12px;">🤳</div>
-          <h3 style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;">Vérification de profil</h3>
-          <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Prenez un selfie avec le geste indiqué pour obtenir le badge ✅ certifié et inspirer confiance.</p>
-          <button onclick="Modal.close();Toast.info('Vérification bientôt disponible — revenez dans quelques jours !')" style="background:var(--pink);border:none;color:white;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;width:100%;">
-            Commencer la vérification
-          </button>
-        </div>`, '');
-    },
 
     confirmLogout() {
       Modal.show(`
