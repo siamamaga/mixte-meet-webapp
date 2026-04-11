@@ -78,13 +78,14 @@ const ProfilePage = (() => {
       <div style="padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:16px;">
 
         <!-- Avatar -->
-        <div style="position:relative;width:100px;height:100px;cursor:pointer;" onclick="ProfilePage.triggerPhotoUpload()">
+        <label for="photo-input" style="position:relative;width:100px;height:100px;cursor:pointer;display:block;">
           <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(232,49,122,0.4);">
             ${avatarHtml}
           </div>
           <div style="position:absolute;bottom:0;right:0;width:30px;height:30px;background:var(--pink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--dark);">📷</div>
         </div>
-        <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="ProfilePage.uploadPhoto(this)">
+        <label for="photo-input" style="display:none;">Photo</label>
+        <input type="file" id="photo-input" accept="image/*" style="position:fixed;top:-999px;left:-999px;width:1px;height:1px;opacity:0;" onchange="ProfilePage.uploadPhoto(this)">
 
         <!-- Nom + statut -->
         <div style="text-align:center;">
@@ -683,6 +684,8 @@ const SettingsPage = {
     }
   },
 };
+
+
 
 
 
