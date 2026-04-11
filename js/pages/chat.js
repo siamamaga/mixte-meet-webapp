@@ -194,8 +194,13 @@ const ChatPage = (() => {
         }, 1200 + Math.random() * 800);
       } else {
         try {
-          const convId = currentMatch.conversation_id || currentMatch.id;
-          await API.post('/conversations/' + convId + '/messages', { content: text });
+          // Creer conversation si inexistante
+          if (!currentMatch.conversation_id) {
+            const conv = await API.post('/conversations/find-or-create', { user_uuid: currentMatch.uuid });
+            currentMatch.conversation_id = conv?.data?.conversation_id;
+          }
+          if (!currentMatch.conversation_id) throw new Error('Conversation introuvable');
+          await API.post('/conversations/' + currentMatch.conversation_id + '/messages', { content: text });
         } catch(e) {
           console.log('Send error complet:', JSON.stringify(e));
           Toast.error('Erreur: ' + (e.message || e.status || JSON.stringify(e)));
@@ -319,6 +324,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
