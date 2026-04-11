@@ -197,8 +197,8 @@ const ChatPage = (() => {
           const convId = currentMatch.conversation_id || currentMatch.id;
           await API.post('/conversations/' + convId + '/messages', { content: text });
         } catch(e) {
-          console.log('Send error:', e);
-          Toast.error('Erreur envoi - verifiez votre connexion');
+          console.log('Send error complet:', JSON.stringify(e));
+          Toast.error('Erreur: ' + (e.message || e.status || JSON.stringify(e)));
         }
       }
     },
@@ -319,6 +319,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
