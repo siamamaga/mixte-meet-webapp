@@ -28,9 +28,14 @@ const ChatPage = (() => {
   }
 
   function open(match) {
-    currentMatch = match;
-    messages = [];
+    // Reset complet avant ouverture
     stopPolling();
+    currentMatch = null;
+    messages = [];
+    const list = document.getElementById('messages-list');
+    if (list) list.innerHTML = '';
+    // Assigner le nouveau match
+    currentMatch = match;
     App.navigate('chat');
     render();
     loadMessages();
@@ -324,6 +329,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
