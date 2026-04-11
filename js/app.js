@@ -76,13 +76,47 @@ const App = (() => {
   // Démarrer au chargement
   document.addEventListener('DOMContentLoaded', init);
 
-  // Gestion du bouton retour hardware (Android)
-  window.addEventListener('popstate', () => {
-    if (currentPage === 'chat' || currentPage === 'settings') navigate('profile');
-    else if (currentPage !== 'feed') navigate('feed');
+  // Gestion du bouton retour hardware (Android) + bouton navigateur
+  window.addEventListener('popstate', (e) => {
+    e.preventDefault();
+    if (currentPage === 'chat') {
+      Modal.show(
+        '<div style="text-align:center;padding:8px;">' +
+          '<div style="font-size:40px;margin-bottom:12px;">🦋</div>' +
+          '<p style="font-size:15px;margin-bottom:6px;font-weight:600;">Quitter Mixte-Meet ?</p>' +
+          '<p style="font-size:13px;color:var(--muted);margin-bottom:20px;">Vous avez une conversation en cours.</p>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="Modal.close()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:Outfit,sans-serif;">Rester</button>' +
+            '<button onclick="Modal.close();ChatPage.close()" style="flex:1;background:var(--pink);border:none;color:white;padding:12px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Quitter</button>' +
+          '</div>' +
+        '</div>', '');
+      history.pushState(null, '', window.location.href);
+    } else if (currentPage === 'settings') {
+      navigate('profile');
+      history.pushState(null, '', window.location.href);
+    } else if (currentPage !== 'feed') {
+      navigate('feed');
+      history.pushState(null, '', window.location.href);
+    } else {
+      // Sur la page feed - demander confirmation pour quitter l'app
+      Modal.show(
+        '<div style="text-align:center;padding:8px;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">🦋</div>' +
+          '<p style="font-size:15px;margin-bottom:6px;font-weight:600;">Quitter Mixte-Meet ?</p>' +
+          '<p style="font-size:13px;color:var(--muted);margin-bottom:20px;">L\'amour n\'a pas de frontières — restez encore un peu !</p>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button onclick="Modal.close();history.pushState(null,\\'\\',window.location.href)" style="flex:1;background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Rester 🦋</button>' +
+            '<button onclick="Modal.close();history.back()" style="flex:1;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:white;padding:12px;border-radius:50px;cursor:pointer;font-family:Outfit,sans-serif;">Quitter</button>' +
+          '</div>' +
+        '</div>', '');
+      history.pushState(null, '', window.location.href);
+    }
   });
+  // Initialiser l'historique pour intercepter le retour
+  history.pushState(null, '', window.location.href);
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
