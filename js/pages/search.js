@@ -22,7 +22,7 @@ const SearchPage = (() => {
 
   function renderCard(p) {
     const status = onlineStatus(p.last_active_at);
-    const age = p.age || '?';
+    const age = p.age ? p.age : (p.birthdate ? (new Date().getFullYear() - new Date(p.birthdate).getFullYear()) : '?');
     const flag = FLAG(p.country_code);
     const photo = p.main_photo
       ? '<img src="' + p.main_photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
@@ -232,3 +232,4 @@ const SearchPage = (() => {
     },
   };
 })();
+
