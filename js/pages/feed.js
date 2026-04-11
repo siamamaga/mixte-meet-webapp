@@ -254,7 +254,13 @@ const FeedPage = (() => {
     },
 
     showNotifs() { Toast.info('Aucune nouvelle notification'); },
-    reload() { currentIdx=0; profiles=[]; loadProfiles(); },
+    async reload() {
+      try {
+        await API.delete('/swipes/reset');
+      } catch(e) {}
+      currentIdx=0; profiles=[]; loadProfiles();
+    },
   };
 })();
+
 
