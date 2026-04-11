@@ -80,6 +80,7 @@ const ChatPage = (() => {
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
       renderMessages();
+      if (currentConvId) API.put('/conversations/' + currentConvId + '/read', {}).catch(function(){});
       startPolling(myOpenId);
     } catch(e) {
       if (myOpenId !== openId) return;
@@ -359,3 +360,5 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
