@@ -17,7 +17,12 @@ const MatchesPage = (() => {
     try {
       const data = await API.get('/matches');
       if (data?.data && data.data.length > 0) {
-        matches = data.data;
+        // Calculer le vrai statut en ligne depuis last_active_at
+      matches = data.data.map(function(m) {
+        const lastActive = m.last_active_at ? new Date(m.last_active_at) : null;
+        m.online = lastActive && (Date.now() - lastActive) < 900000;
+        return m;
+      });
       } else {
         matches = DEMO_MATCHES;
       }

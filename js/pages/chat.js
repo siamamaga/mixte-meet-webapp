@@ -159,11 +159,22 @@ const ChatPage = (() => {
 
   function renderMsg(msg) {
     const avatar = currentMatch ? (currentMatch.emoji || '👤') : '👤';
+    // Indicateur de statut message style WhatsApp
+    let statusIcon = '';
+    if (msg.sent) {
+      if (msg.is_read) {
+        statusIcon = '<span style="color:#53bdeb;font-size:12px;margin-left:3px;">✓✓</span>';
+      } else if (msg.delivered || !isDemo()) {
+        statusIcon = '<span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:3px;">✓✓</span>';
+      } else {
+        statusIcon = '<span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:3px;">✓</span>';
+      }
+    }
     return '<div class="chat-message ' + (msg.sent ? 'sent' : 'recv') + '">' +
       (!msg.sent ? '<div class="msg-avatar">' + avatar + '</div>' : '') +
       '<div>' +
         '<div class="msg-bubble">' + (msg.content || '') + '</div>' +
-        '<div class="msg-time">' + msg.time + '</div>' +
+        '<div class="msg-time">' + msg.time + statusIcon + '</div>' +
       '</div>' +
     '</div>';
   }
