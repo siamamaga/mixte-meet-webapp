@@ -75,6 +75,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Profil</span>
         </button>
+        <button class="nav-btn" data-page="search" onclick="App.navigate('search')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Recherche</span>
+        </button>
       </nav>
 
       <main id="main-content">
@@ -83,6 +87,7 @@
         <div id="page-chat"     class="page hidden"></div>
         <div id="page-profile"  class="page hidden"></div>
         <div id="page-settings" class="page hidden"></div>
+        <div id="page-search"   class="page hidden"></div>
       </main>
     </div>
   </div>
@@ -99,6 +104,7 @@
 
   <!-- Scripts dans le bon ordre -->
   <script src="js/services/api.js"></script>
+  <script src="js/pages/search.js"></script>
   <script src="js/services/auth.service.js"></script>
   <script src="js/services/socket.js"></script>
   <script src="js/utils.js"></script>
@@ -111,3 +117,4 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+

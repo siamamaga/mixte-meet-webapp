@@ -8,6 +8,7 @@ const App = (() => {
     chat:     { el: 'page-chat',     module: ChatPage,     navBtn: 'matches' },
     profile:  { el: 'page-profile',  module: ProfilePage,  navBtn: 'profile' },
     settings: { el: 'page-settings', module: SettingsPage, navBtn: 'profile' },
+    search:   { el: 'page-search',   module: SearchPage,   navBtn: 'search' },
   };
 
   // ── Navigation ─────────────────────────────────────────
@@ -85,6 +86,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
