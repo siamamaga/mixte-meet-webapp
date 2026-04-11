@@ -84,7 +84,10 @@ const AuthPage = (() => {
           <button type="button" class="btn btn-secondary btn-full" onclick="AuthPage.demoLogin()">
             🎭 Connexion démo
           </button>
-          <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:8px;">
+          <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:4px;">
+            <button type="button" onclick="AuthPage.forgotPassword()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;">Mot de passe oublié ?</button>
+          </p>
+          <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:4px;">
             Pas encore inscrit ? <button type="button" onclick="AuthPage.showRegister()" style="background:none;border:none;color:var(--pink-light);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;">Créer un compte</button>
           </p>
         </div>
@@ -344,6 +347,30 @@ const AuthPage = (() => {
       });
     },
 
+    forgotPassword() {
+      Modal.show(
+        '<div style="display:flex;flex-direction:column;gap:16px;">' +
+          '<p style="font-size:14px;color:var(--muted);">Entrez votre email — vous recevrez un lien de reinitialisation.</p>' +
+          '<div class="input-group">' +
+            '<label class="input-label">Email</label>' +
+            '<input id="forgot-email" type="email" class="input-field" placeholder="votre@email.com">' +
+          '</div>' +
+          '<button onclick="AuthPage._doForgotPassword()" style="background:var(--pink);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Envoyer le lien</button>' +
+        '</div>', 'Mot de passe oublie');
+    },
+
+    async _doForgotPassword() {
+      const email = document.getElementById('forgot-email')?.value.trim();
+      if (!email) { Toast.error('Entrez votre email'); return; }
+      try {
+        await API.post('/auth/forgot-password', { email });
+        Modal.close();
+        Toast.success('Email envoye ! Verifiez votre boite mail.');
+      } catch(err) {
+        Toast.error(err.message || 'Erreur - verifiez votre email');
+      }
+    },
+
     async demoLogin() {
       // Mode démo - simuler un utilisateur connecté
       AuthService.save({
@@ -377,4 +404,6 @@ const AuthPage = (() => {
     },
   };
 })();
+
+
 
