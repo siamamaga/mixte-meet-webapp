@@ -321,31 +321,111 @@ const ProfilePage = (() => {
       }
     },
 
-    editPreferences() {
+   editPreferences() {
       const user = AuthService.getUser() || {};
       const prefs = user.preferences || {};
-      Modal.show(`
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div class="input-group">
-            <label class="input-label">Je recherche</label>
-            <select id="pref-gender" class="input-field" style="background:var(--surface);">
-              <option value="female" ${prefs.gender === 'female' ? 'selected' : ''}>Des femmes</option>
-              <option value="male"   ${prefs.gender === 'male'   ? 'selected' : ''}>Des hommes</option>
-              <option value="both"   ${prefs.gender === 'both'   ? 'selected' : ''}>Les deux</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label class="input-label">Âge minimum : <span id="lbl-min">${prefs.age_min || 18}</span> ans</label>
-            <input type="range" min="18" max="65" value="${prefs.age_min || 18}" style="width:100%;" oninput="document.getElementById('lbl-min').textContent=this.value" id="pref-age-min">
-          </div>
-          <div class="input-group">
-            <label class="input-label">Âge maximum : <span id="lbl-max">${prefs.age_max || 50}</span> ans</label>
-            <input type="range" min="18" max="70" value="${prefs.age_max || 50}" style="width:100%;" oninput="document.getElementById('lbl-max').textContent=this.value" id="pref-age-max">
-          </div>
-          <button onclick="ProfilePage.savePreferences()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;">
-            Sauvegarder ✅
-          </button>
-        </div>`, '🎯 Mes préférences');
+      const ageMin = prefs.age_min || 18;
+      const ageMax = prefs.age_max || 50;
+
+      const genderOptions = [
+        { val: 'woman', icon: '👩', label: 'Des femmes' },
+        { val: 'man',   icon: '👨', label: 'Des hommes' },
+        { val: 'both',  icon: '💞', label: 'Tout le monde', span2: true },
+      ];
+
+      const relationOptions = [
+        { val: 'serious',    icon: '💍', label: 'Relation sérieuse' },
+        { val: 'casual',     icon: '💫', label: 'Rencontre casual' },
+        { val: 'friendship', icon: '🤝', label: "Amitié d'abord" },
+        { val: 'any',        icon: '🦋', label: 'Ouvert à tout' },
+      ];
+
+      const currentGender   = prefs.gender        || 'woman';
+      const currentRelation = prefs.relation_type || 'any';
+      const currentDist     = prefs.distance      || 0;
+
+      const genderHtml = genderOptions.map(g =>
+        '<div onclick="ProfilePage._selectPref(this,\'pref-gender\',\'' + g.val + '\')" ' +
+          'class="option-card ' + (currentGender === g.val ? 'selected' : '') + '" ' +
+          'style="padding:12px;text-align:center;cursor:pointer;border-radius:12px;border:1.5px solid ' + (currentGender === g.val ? 'var(--pink)' : 'var(--border)') + ';background:' + (currentGender === g.val ? 'rgba(232,49,122,0.1)' : 'transparent') + ';' + (g.span2 ? 'grid-column:span 2;' : '') + '">' +
+          '<div style="font-size:22px;margin-bottom:4px;">' + g.icon + '</div>' +
+          '<div style="font-size:12px;font-weight:600;">' + g.label + '</div>' +
+        '</div>'
+      ).join('');
+
+      const relationHtml = relationOptions.map(r =>
+        '<div onclick="ProfilePage._selectPref(this,\'pref-relation\',\'' + r.val + '\')" ' +
+          'class="option-card ' + (currentRelation === r.val ? 'selected' : '') + '" ' +
+          'style="padding:12px;text-align:center;cursor:pointer;border-radius:12px;border:1.5px solid ' + (currentRelation === r.val ? 'var(--pink)' : 'var(--border)') + ';background:' + (currentRelation === r.val ? 'rgba(232,49,122,0.1)' : 'transparent') + ';">' +
+          '<div style="font-size:20px;margin-bottom:4px;">' + r.icon + '</div>' +
+          '<div style="font-size:11px;font-weight:500;">' + r.label + '</div>' +
+        '</div>'
+      ).join('');
+
+      const distOptions = [
+        { val: 50,  label: 'Moins de 50 km' },
+        { val: 100, label: 'Moins de 100 km' },
+        { val: 500, label: 'Moins de 500 km' },
+        { val: 0,   label: 'Monde entier' },
+      ];
+
+      const distHtml = distOptions.map(d =>
+        '<option value="' + d.val + '"' + (currentDist === d.val ? ' selected' : '') + '>' + d.label + '</option>'
+      ).join('');
+
+      Modal.show(
+        '<div style="display:flex;flex-direction:column;gap:20px;">' +
+
+          '<div class="input-group">' +
+            '<label class="input-label">Je recherche</label>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+              genderHtml +
+            '</div>' +
+            '<input type="hidden" id="pref-gender" value="' + currentGender + '">' +
+          '</div>' +
+
+          '<div class="input-group">' +
+            '<label class="input-label">Tranche d\'âge</label>' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;color:var(--muted);">' +
+              '<span>Min : <strong id="lbl-min" style="color:white;">' + ageMin + '</strong> ans</span>' +
+              '<span>Max : <strong id="lbl-max" style="color:white;">' + ageMax + '</strong> ans</span>' +
+            '</div>' +
+            '<input type="range" id="pref-age-min" min="18" max="65" value="' + ageMin + '" style="width:100%;accent-color:var(--pink);" oninput="document.getElementById(\'lbl-min\').textContent=this.value">' +
+            '<input type="range" id="pref-age-max" min="18" max="70" value="' + ageMax + '" style="width:100%;accent-color:var(--pink);margin-top:8px;" oninput="document.getElementById(\'lbl-max\').textContent=this.value">' +
+          '</div>' +
+
+          '<div class="input-group">' +
+            '<label class="input-label">Type de relation</label>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+              relationHtml +
+            '</div>' +
+            '<input type="hidden" id="pref-relation" value="' + currentRelation + '">' +
+          '</div>' +
+
+          '<div class="input-group">' +
+            '<label class="input-label">Distance maximale</label>' +
+            '<select id="pref-distance" class="input-field" style="background:var(--surface);">' +
+              distHtml +
+            '</select>' +
+          '</div>' +
+
+          '<button onclick="ProfilePage.savePreferences()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;font-size:15px;">Sauvegarder ✅</button>' +
+        '</div>',
+        '🎯 Mes préférences');
+    },
+
+    _selectPref(el, inputId, value) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.option-card').forEach(function(c) {
+        c.classList.remove('selected');
+        c.style.borderColor = 'var(--border)';
+        c.style.background  = 'transparent';
+      });
+      el.classList.add('selected');
+      el.style.borderColor = 'var(--pink)';
+      el.style.background  = 'rgba(232,49,122,0.1)';
+      const input = document.getElementById(inputId);
+      if (input) input.value = value;
     },
 
     async savePreferences() {
