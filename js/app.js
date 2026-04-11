@@ -112,11 +112,11 @@ const App = (() => {
       history.pushState(null, '', window.location.href);
     }
   });
-  // Initialiser l'historique pour intercepter le retour
-  history.pushState(null, '', window.location.href);
+
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
