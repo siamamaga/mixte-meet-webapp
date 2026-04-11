@@ -20,7 +20,10 @@ const MatchesPage = (() => {
         // Calculer le vrai statut en ligne depuis last_active_at
       matches = data.data.map(function(m) {
         const lastActive = m.last_active_at ? new Date(m.last_active_at) : null;
-        m.online = lastActive && (Date.now() - lastActive) < 900000;
+        const diff = lastActive ? (Date.now() - lastActive) : Infinity;
+        m.online = diff < 900000;
+        m.absent = diff >= 900000 && diff < 3600000;
+        m.onlineColor = diff < 900000 ? '#22c55e' : (diff < 3600000 ? '#f59e0b' : null);
         return m;
       });
       } else {
@@ -75,7 +78,7 @@ const MatchesPage = (() => {
           '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;font-size:36px;border:2.5px solid ' + (hasUnread ? 'var(--pink)' : 'var(--border)') + ';overflow:hidden;">' +
             (m.main_photo ? '<img src="' + m.main_photo + '" style="width:100%;height:100%;object-fit:cover;">' : (m.emoji || '👤')) +
           '</div>' +
-          (m.online ? '<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;background:var(--green);border:2px solid var(--dark);border-radius:50%;"></div>' : '') +
+          (m.onlineColor ? '<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;background:' + m.onlineColor + ';border:2px solid var(--dark);border-radius:50%;box-shadow:0 0 6px ' + m.onlineColor + ';"></div>' : '') +
         '</div>' +
         '<span style="font-size:12px;font-weight:500;color:' + (hasUnread ? 'var(--white)' : 'var(--muted)') + ';">' + m.first_name + '</span>' +
       '</div>';
@@ -94,7 +97,7 @@ const MatchesPage = (() => {
           '<div style="background:linear-gradient(135deg,#2D1F38,var(--pink));display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;border-radius:50%;overflow:hidden;">' +
             (m.main_photo ? '<img src="' + m.main_photo + '" style="width:100%;height:100%;object-fit:cover;">' : (m.emoji || '👤')) +
           '</div>' +
-          (m.online ? '<div class="match-online-dot"></div>' : '') +
+          (m.onlineColor ? '<div class="match-online-dot" style="background:' + m.onlineColor + ';box-shadow:0 0 6px ' + m.onlineColor + ';"></div>' : '') +
         '</div>' +
         '<div class="match-info">' +
           '<div class="match-name">' + m.first_name + ' <span style="font-size:12px;color:var(--muted);font-weight:400;">' + flag + '</span></div>' +
@@ -113,3 +116,4 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
