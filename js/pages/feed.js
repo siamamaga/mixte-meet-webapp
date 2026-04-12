@@ -256,11 +256,17 @@ const FeedPage = (() => {
     showNotifs() { Toast.info('Aucune nouvelle notification'); },
     async reload() {
       try {
-        await API.delete('/swipes/reset');
-      } catch(e) {}
-      currentIdx=0; profiles=[]; loadProfiles();
+        await fetch('https://mixte-meet-backend.onrender.com/api/swipes/reset', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('mm_token') || '') }
+        });
+      } catch(e) { console.log('reset error:', e); }
+      currentIdx = 0;
+      profiles = [];
+      loadProfiles();
     },
   };
 })();
+
 
 
