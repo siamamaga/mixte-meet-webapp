@@ -270,12 +270,6 @@ const FeedPage = (() => {
     showNotifs() { Toast.info('Aucune nouvelle notification'); },
 
     async reload() {
-      try {
-        await fetch('https://mixte-meet-backend.onrender.com/api/swipes/reset', {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('mm_token') || '') }
-        });
-      } catch(e) { console.log('reset error:', e); }
       currentIdx = 0;
       profiles = [];
       loadProfiles();
