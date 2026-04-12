@@ -81,7 +81,7 @@ const MatchesPage = (() => {
           '</div>' +
           (m.onlineColor ? '<div style="position:absolute;bottom:2px;right:2px;width:14px;height:14px;background:' + m.onlineColor + ';border:2px solid var(--dark);border-radius:50%;box-shadow:0 0 6px ' + m.onlineColor + ';"></div>' : '') +
         '</div>' +
-        '<span style="font-size:12px;font-weight:500;color:' + (hasUnread ? 'var(--white)' : 'var(--muted)') + ';">' + m.first_name + '</span>' +
+        '<span style="font-size:12px;font-weight:500;color:white;">' + m.first_name + '</span>' +
       '</div>';
     });
     html += '</div>';
@@ -117,5 +117,6 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
 
 
