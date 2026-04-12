@@ -34,6 +34,17 @@ const FeedPage = (() => {
         <button class="continent-btn" onclick="FeedPage.filterContinent('AS',this)">🌏 Asie</button>
       </div>
 filterOnline(btn) {
+  document.querySelectorAll('.continent-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  profiles = profiles.filter(function(p) {
+    if (!p.last_active_at) return false;
+    const d = Date.now() - new Date(p.last_active_at.replace(' ','T') + 'Z');
+    return d < 3600000;
+  });
+  currentIdx = 0;
+  showProfile();
+},
+filterOnline(btn) {
   document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   profiles = profiles.filter(function(p) {
