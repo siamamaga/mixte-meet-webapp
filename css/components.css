@@ -518,3 +518,7 @@ select.input-field option { background: var(--charcoal); }
 .option-card.selected { background: rgba(232,49,122,0.12); border-color: rgba(232,49,122,0.5); }
 .option-card-icon { font-size: 28px; margin-bottom: 8px; }
 .option-card-label { font-size: 14px; font-weight: 500; }
+
+.match-name { font-size:15px; font-weight:600; color:white !important; }
+.match-preview { font-size:13px; color:var(--muted); }
+
