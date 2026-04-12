@@ -9,7 +9,7 @@ const SearchPage = (() => {
   function onlineStatus(last_active_at) {
     if (!last_active_at) return { color: '#6b7280', label: 'Hors ligne' };
     // Forcer UTC pour eviter decalage fuseau horaire
-    const dateStr = last_active_at.replace(' ', 'T') + 'Z';
+    const dateStr = last_active_at;
     const diff = Date.now() - new Date(dateStr);
     if (diff < 900000)   return { color: '#22c55e', label: 'En ligne' };
     if (diff < 3600000)  return { color: '#f59e0b', label: 'Absent' };
@@ -234,6 +234,7 @@ const SearchPage = (() => {
     },
   };
 })();
+
 
 
 

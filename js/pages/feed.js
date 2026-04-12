@@ -90,7 +90,8 @@ const FeedPage = (() => {
     const age    = profile.age || '?';
     const flag   = FLAG(profile.country_code);
     const city   = profile.city || profile.country_name || '';
-    const lastActive = profile.last_active_at ? new Date(profile.last_active_at.replace(' ', 'T') + 'Z') : null;
+    const rawLa = profile.last_active_at;
+    const lastActive = rawLa ? new Date(rawLa) : null;
     const diff = lastActive ? Date.now() - lastActive : Infinity;
     const online = isDemo || diff < 900000;
     const absent = !isDemo && diff >= 900000 && diff < 3600000;
@@ -276,3 +277,4 @@ const FeedPage = (() => {
     },
   };
 })();
+
