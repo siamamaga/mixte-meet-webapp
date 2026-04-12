@@ -138,7 +138,7 @@ const SearchPage = (() => {
 
     // Charger les profils
     try {
-      const data = await API.get('/feed?limit=50');
+      const data = await API.get('/search');
       allProfiles = (data?.data || []).filter(p => p.profile_type !== 'demo');
       // Ajouter aussi les profils démo pour demo
       const demo = (data?.data || []).filter(p => p.profile_type === 'demo');
@@ -234,6 +234,7 @@ const SearchPage = (() => {
     },
   };
 })();
+
 
 
 
