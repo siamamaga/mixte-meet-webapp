@@ -27,12 +27,23 @@ const FeedPage = (() => {
       </div>
 
       <div style="padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
-        <button class="continent-btn active" onclick="FeedPage.filterContinent('',this)">🌍 Tous</button>
+        <button class="continent-btn active" onclick="FeedPage.filterContinent('',this)">🌍 Tous</button><button class="continent-btn" onclick="FeedPage.filterOnline(this)">🟢 En ligne</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('AF',this)">🌍 Afrique</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('EU',this)">EU Europe</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('NA',this)">🌎 Amériques</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('AS',this)">🌏 Asie</button>
       </div>
+filterOnline(btn) {
+  document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  profiles = profiles.filter(function(p) {
+    if (!p.last_active_at) return false;
+    const d = Date.now() - new Date(p.last_active_at.replace(' ','T') + 'Z');
+    return d < 3600000;
+  });
+  currentIdx = 0;
+  showProfile();
+},
 
       <div style="flex:1;position:relative;padding:0 16px;display:flex;flex-direction:column;gap:0;">
         <div id="feed-card-area" style="position:relative;flex:1;min-height:380px;margin-bottom:16px;">
@@ -267,6 +278,8 @@ const FeedPage = (() => {
     },
   };
 })();
+
+
 
 
 

@@ -19,7 +19,8 @@ const MatchesPage = (() => {
       if (data?.data && data.data.length > 0) {
         // Calculer le vrai statut en ligne depuis last_active_at
       matches = data.data.map(function(m) {
-        const lastActive = m.last_active_at ? new Date(m.last_active_at) : null;
+        const rawDate = m.last_active_at ? m.last_active_at.replace(' ','T') + 'Z' : null;
+        const lastActive = rawDate ? new Date(rawDate) : null;
         const diff = lastActive ? (Date.now() - lastActive) : Infinity;
         m.online = diff < 900000;
         m.absent = diff >= 900000 && diff < 3600000;
@@ -116,4 +117,5 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
 

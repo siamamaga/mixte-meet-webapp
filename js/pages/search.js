@@ -8,7 +8,9 @@ const SearchPage = (() => {
   // Statut en ligne : vert < 15min, orange < 1h, gris sinon
   function onlineStatus(last_active_at) {
     if (!last_active_at) return { color: '#6b7280', label: 'Hors ligne' };
-    const diff = Date.now() - new Date(last_active_at);
+    // Forcer UTC pour eviter decalage fuseau horaire
+    const dateStr = last_active_at.replace(' ', 'T') + 'Z';
+    const diff = Date.now() - new Date(dateStr);
     if (diff < 900000)   return { color: '#22c55e', label: 'En ligne' };
     if (diff < 3600000)  return { color: '#f59e0b', label: 'Absent' };
     return { color: '#6b7280', label: 'Hors ligne' };
@@ -232,5 +234,6 @@ const SearchPage = (() => {
     },
   };
 })();
+
 
 
