@@ -323,9 +323,8 @@ const ProfilePage = (() => {
 
    editPreferences() {
       const user = AuthService.getUser() || {};
-      const prefs = user.preferences || {};
-      const ageMin = prefs.age_min || 18;
-      const ageMax = prefs.age_max || 50;
+      const ageMin = user.age_min || 18;
+      const ageMax = user.age_max || 50;
 
       const genderOptions = [
         { val: 'woman', icon: '👩', label: 'Des femmes' },
@@ -340,9 +339,10 @@ const ProfilePage = (() => {
         { val: 'any',        icon: '🦋', label: 'Ouvert à tout' },
       ];
 
-      const currentGender   = prefs.gender        || 'woman';
-      const currentRelation = prefs.relation_type || 'any';
-      const currentDist     = prefs.distance      || 0;
+      let currentGender = 'woman';
+try { const lf = typeof user.looking_for==='string'?JSON.parse(user.looking_for):(user.looking_for||[]); if(lf.includes('man')&&lf.includes('woman'))currentGender='both'; else if(lf.includes('man'))currentGender='man'; } catch(e){}
+const currentRelation = user.relation_type || 'any';
+const currentDist     = user.distance      || 0;
 
       const genderHtml = genderOptions.map(g =>
         '<div onclick="ProfilePage._selectPref(this,\'pref-gender\',\'' + g.val + '\')" ' +
