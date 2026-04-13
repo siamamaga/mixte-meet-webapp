@@ -79,8 +79,17 @@ const ChatPage = (() => {
         content: msg.content,
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
-      renderMessages();
-      if (currentConvId) API.put('/conversations/' + currentConvId + '/read', {}).catch(function(){});
+      if (currentConvId) {
+        API.put('/conversations/' + currentConvId + '/read', {}).then(function() {
+          messages = messages.map(function(m) {
+            if (!m.sent) m.is_read = true;
+            return m;
+          });
+          renderMessages();
+        }).catch(function(){ renderMessages(); });
+      } else {
+        renderMessages();
+      }
       startPolling(myOpenId);
     } catch(e) {
       if (myOpenId !== openId) return;
@@ -360,6 +369,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
