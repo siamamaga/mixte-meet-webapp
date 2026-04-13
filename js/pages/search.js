@@ -11,8 +11,8 @@ const SearchPage = (() => {
     // Forcer UTC pour eviter decalage fuseau horaire
     const dateStr = last_active_at;
     const diff = Date.now() - new Date(dateStr);
-    if (diff < 900000)   return { color: '#22c55e', label: 'En ligne' };
-    if (diff < 3600000)  return { color: '#f59e0b', label: 'Absent' };
+    if (diff < 1800000)   return { color: '#22c55e', label: 'En ligne' };
+    if (diff < 7200000)  return { color: '#f59e0b', label: 'Absent' };
     return { color: '#6b7280', label: 'Hors ligne' };
   }
 
@@ -234,6 +234,7 @@ const SearchPage = (() => {
     },
   };
 })();
+
 
 
 

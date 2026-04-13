@@ -22,9 +22,9 @@ const MatchesPage = (() => {
         const rawDate = m.last_active_at ? m.last_active_at : null;
         const lastActive = rawDate ? new Date(rawDate) : null;
         const diff = lastActive ? (Date.now() - lastActive) : Infinity;
-        m.online = diff < 900000;
-        m.absent = diff >= 900000 && diff < 3600000;
-        m.onlineColor = diff < 900000 ? '#22c55e' : (diff < 3600000 ? '#f59e0b' : null);
+        m.online = diff < 1800000;
+        m.absent = diff >= 1800000 && diff < 7200000;
+        m.onlineColor = diff < 1800000 ? '#22c55e' : (diff < 7200000 ? '#f59e0b' : null);
         return m;
       });
       } else {
@@ -117,6 +117,7 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
 
 
 

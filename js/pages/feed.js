@@ -73,7 +73,7 @@ const FeedPage = (() => {
         profs = profs.filter(function(p) {
           if (!p.last_active_at) return false;
           const d = Date.now() - new Date(p.last_active_at.replace(' ', 'T') + 'Z');
-          return d < 3600000;
+          return d < 7200000;
         });
       }
       profiles = profs;
@@ -93,8 +93,8 @@ const FeedPage = (() => {
     const rawLa = profile.last_active_at;
     const lastActive = rawLa ? new Date(rawLa) : null;
     const diff = lastActive ? Date.now() - lastActive : Infinity;
-    const online = isDemo || diff < 900000;
-    const absent = !isDemo && diff >= 900000 && diff < 3600000;
+    const online = isDemo || diff < 1800000;
+    const absent = !isDemo && diff >= 1800000 && diff < 7200000;
     const statusBadge = online
       ? '<div style="position:absolute;top:14px;right:14px;background:rgba(34,197,94,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">🟢 En ligne</div>'
       : absent
@@ -277,4 +277,5 @@ const FeedPage = (() => {
     },
   };
 })();
+
 
