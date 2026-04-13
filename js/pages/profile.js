@@ -429,21 +429,18 @@ const ProfilePage = (() => {
     },
 
     async savePreferences() {
-      const payload = {
-        preferences: {
-          gender:  document.getElementById('pref-gender')?.value,
-          age_min: parseInt(document.getElementById('pref-age-min')?.value),
-          age_max: parseInt(document.getElementById('pref-age-max')?.value),
-        }
-      };
-      try {
-        await API.put('/me', payload);
-        Toast.success('Préférences sauvegardées ✅');
-        Modal.close();
-      } catch(err) {
-        Toast.error(err.message || 'Erreur');
-      }
-    },
+  const gender   = document.getElementById('pref-gender')?.value   || 'woman';
+  const age_min  = parseInt(document.getElementById('pref-age-min')?.value  || 18);
+  const age_max  = parseInt(document.getElementById('pref-age-max')?.value  || 50);
+  const relation = document.getElementById('pref-relation')?.value || 'any';
+  const distance = parseInt(document.getElementById('pref-distance')?.value || 0);
+  const payload  = { looking_for: gender, age_min, age_max, relation_type: relation, distance };
+  try {
+    await API.put('/me', payload);
+    Toast.success('Préférences sauvegardées ✅');
+    Modal.close();
+  } catch(err) { Toast.error(err.message || 'Erreur'); }
+},
 
     async requestVerification() {
       const user = AuthService.getUser() || {};
