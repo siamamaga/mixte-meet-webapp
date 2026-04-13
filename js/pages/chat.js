@@ -75,7 +75,7 @@ const ChatPage = (() => {
       const myUuid = AuthService.getUser()?.uuid;
       messages = (data?.data || []).map(msg => ({
         id: msg.id,
-        sent: msg.sender_uuid === myUuid || msg.sender_id === AuthService.getUser()?.id,
+        sent: msg.sender_uuid === myUuid,
         content: msg.content,
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
@@ -100,7 +100,7 @@ const ChatPage = (() => {
         const myUuid = AuthService.getUser()?.uuid;
         const newMsgs = (data?.data || []).map(msg => ({
           id: msg.id,
-          sent: msg.sender_uuid === myUuid || msg.sender_id === AuthService.getUser()?.id,
+          sent: msg.sender_uuid === myUuid,
           content: msg.content,
           time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
         }));
@@ -360,5 +360,6 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
