@@ -434,7 +434,8 @@ const ProfilePage = (() => {
   const age_max  = parseInt(document.getElementById('pref-age-max')?.value  || 50);
   const relation = document.getElementById('pref-relation')?.value || 'any';
   const distance = parseInt(document.getElementById('pref-distance')?.value || 0);
-  const payload  = { looking_for: gender, age_min, age_max, relation_type: relation, distance };
+  const lookingFor = gender === 'both' ? '["man","woman"]' : '["' + gender + '"]';
+const payload  = { looking_for: lookingFor, age_min, age_max, relation_type: relation, distance };
   try {
     await API.put('/me', payload);
     Toast.success('Préférences sauvegardées ✅');
