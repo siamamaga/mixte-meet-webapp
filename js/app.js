@@ -7,7 +7,8 @@ function parseDate(str) {
   if (m1) return new Date(m1[3], m1[2]-1, m1[1], m1[4], m1[5], m1[6]);
   // Format YYYY-MM-DD HH:MM:SS
   return new Date(str.replace(' ', 'T'));
-} - Mixte-Meet SPA Router
+}
+// Mixte-Meet SPA Router
 
 const App = (() => {
   let currentPage = 'feed';
@@ -113,6 +114,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
