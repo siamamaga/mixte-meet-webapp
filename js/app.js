@@ -1,4 +1,13 @@
-// js/app.js — Mixte-Meet SPA Router
+// js/app.js
+// Parse date depuis format MySQL DD/MM/YYYY HH:MM:SS ou YYYY-MM-DD HH:MM:SS
+function parseDate(str) {
+  if (!str) return null;
+  // Format DD/MM/YYYY HH:MM:SS
+  const m1 = str.match(/^(\d{2})\/(\d{2})\/(\d{4})\s(\d{2}):(\d{2}):(\d{2})/);
+  if (m1) return new Date(m1[3], m1[2]-1, m1[1], m1[4], m1[5], m1[6]);
+  // Format YYYY-MM-DD HH:MM:SS
+  return new Date(str.replace(' ', 'T'));
+} — Mixte-Meet SPA Router
 
 const App = (() => {
   let currentPage = 'feed';
@@ -104,6 +113,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 

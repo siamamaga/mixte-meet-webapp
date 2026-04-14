@@ -91,7 +91,7 @@ const FeedPage = (() => {
     const flag   = FLAG(profile.country_code);
     const city   = profile.city || profile.country_name || '';
     const rawLa = profile.last_active_at;
-    const lastActive = rawLa ? new Date(rawLa) : null;
+    const lastActive = rawLa ? parseDate(rawLa) : null;
     const diff = lastActive ? Date.now() - lastActive : Infinity;
     const online = isDemo || diff < 1800000;
     const absent = !isDemo && diff >= 1800000 && diff < 7200000;
@@ -277,5 +277,6 @@ const FeedPage = (() => {
     },
   };
 })();
+
 
 
