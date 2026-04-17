@@ -69,7 +69,7 @@ const ChatPage = (() => {
 
       if (!currentConvId) { renderMessages(); return; }
 
-      const data = await API.get('/conversations/' + currentConvId + '/messages');
+      const data = await API.get('/conversations/' + currentConvId + '/messages?t=' + Date.now());
       if (myOpenId !== openId) return; // abandonner si autre match ouvert
 
       const myUuid = AuthService.getUser()?.uuid;
@@ -104,7 +104,7 @@ const ChatPage = (() => {
     pollingInterval = setInterval(async () => {
       if (myOpenId !== openId || !currentConvId || isDemo()) return;
       try {
-        const data = await API.get('/conversations/' + currentConvId + '/messages');
+        const data = await API.get('/conversations/' + currentConvId + '/messages?t=' + Date.now());
         if (myOpenId !== openId) return;
         const myUuid = AuthService.getUser()?.uuid;
         const newMsgs = (data?.data || []).map(msg => ({
@@ -258,7 +258,7 @@ const ChatPage = (() => {
             currentMatch.conversation_id = currentConvId;
           }
           if (!currentConvId) throw new Error('Conversation introuvable');
-          await API.post('/conversations/' + currentConvId + '/messages', { content: text });
+          await API.post('/conversations/' + currentConvId + '/messages?t=' + Date.now(), { content: text });
         } catch(e) {
           console.log('Send error:', e);
           Toast.error('Erreur envoi: ' + (e.message || e.status || 'connexion'));
@@ -369,6 +369,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
