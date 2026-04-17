@@ -111,9 +111,14 @@ const ChatPage = (() => {
           id: msg.id,
           sent: msg.sender_uuid === myUuid,
           content: msg.content,
+          is_read: msg.is_read,
           time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
         }));
-        if (newMsgs.length > messages.length) {
+        const hasNewMsg = newMsgs.length > messages.length;
+        const hasReadChange = newMsgs.some(function(nm, i) {
+          return messages[i] && nm.is_read !== messages[i].is_read;
+        });
+        if (hasNewMsg || hasReadChange) {
           messages = newMsgs;
           renderMessages();
         }
@@ -369,6 +374,8 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
 
 
 
