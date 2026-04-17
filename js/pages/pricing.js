@@ -284,20 +284,11 @@ const PricingPage = (() => {
           <p style="font-size:18px;font-weight:700;color:var(--pink);margin-bottom:20px;">${currency === 'xof' ? price.toLocaleString('fr-FR') : price.toFixed(2)} ${curr}</p>
 
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <button onclick="Modal.close();Toast.info('MTN Mobile Money — Intégration en cours')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,204,0,0.15);border:1.5px solid rgba(255,204,0,0.4);color:#FFD700;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              📱 MTN Mobile Money
+            <button onclick="PricingPage.payWithFedaPay('')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,204,0,0.15);border:1.5px solid rgba(255,204,0,0.4);color:#FFD700;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
+              📱 MTN / Moov / Wave (Mobile Money)
             </button>
-            <button onclick="Modal.close();Toast.info('Orange Money — Intégration en cours')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,102,0,0.15);border:1.5px solid rgba(255,102,0,0.4);color:#FF6600;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              🟠 Orange Money
-            </button>
-            <button onclick="Modal.close();Toast.info('Wave — Intégration en cours')" style="width:100%;padding:13px;border-radius:50px;background:rgba(59,130,246,0.15);border:1.5px solid rgba(59,130,246,0.4);color:#3B82F6;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              🔵 Wave
-            </button>
-            <button onclick="Modal.close();Toast.info('Carte bancaire — Intégration Stripe en cours')" style="width:100%;padding:13px;border-radius:50px;background:rgba(232,49,122,0.15);border:1.5px solid rgba(232,49,122,0.4);color:var(--pink-light);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              💳 Carte Visa/Mastercard
-            </button>
-            <button onclick="Modal.close();Toast.info('PayPal — Intégration en cours')" style="width:100%;padding:13px;border-radius:50px;background:rgba(0,112,186,0.15);border:1.5px solid rgba(0,112,186,0.4);color:#0070BA;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              💰 PayPal
+            <button onclick="Modal.close();Toast.info('Stripe — Bientôt disponible')" style="width:100%;padding:13px;border-radius:50px;background:rgba(232,49,122,0.15);border:1.5px solid rgba(232,49,122,0.4);color:var(--pink-light);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
+              💳 Carte Visa/Mastercard (Bientôt)
             </button>
           </div>
           <p style="font-size:11px;color:var(--muted);margin-top:14px;">🔒 Paiement sécurisé · Annulation à tout moment</p>
@@ -305,6 +296,20 @@ const PricingPage = (() => {
       `, '');
     },
 
+    async payWithFedaPay(planId) {
+      Modal.close();
+      Toast.info('Redirection vers le paiement...');
+      try {
+        const res = await API.post('/payment/create', { planId });
+        if (res?.data?.url) {
+          window.location.href = res.data.url;
+        } else {
+          Toast.error('Erreur lors de la création du paiement');
+        }
+      } catch(err) {
+        Toast.error(err.message || 'Erreur paiement');
+      }
+    },
     // Afficher depuis n'importe où dans l'app
     show() {
       const html = '<div id="pricing-container"></div>';
@@ -313,3 +318,5 @@ const PricingPage = (() => {
     },
   };
 })();
+
+
