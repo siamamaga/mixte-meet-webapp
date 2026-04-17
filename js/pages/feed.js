@@ -256,7 +256,17 @@ const FeedPage = (() => {
       currentIdx=0; profiles=[];
       const area = document.getElementById('feed-card-area');
       if(area) area.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
-      loadProfiles('', true);
+      API.get('/search').then(function(data) {
+        var profs = (data && data.data) ? data.data : [];
+        profiles = profs.filter(function(p) {
+          if (!p.last_active_at) return false;
+          var d = Date.now() - parseDate(p.last_active_at);
+          return d < 1800000;
+        });
+        currentIdx = 0;
+        if (!profiles.length) showEmpty();
+        else showProfile(profiles[0]);
+      }).catch(function(){ showError(); });
     },
 
     showFilters() {
@@ -277,6 +287,7 @@ const FeedPage = (() => {
     },
   };
 })();
+
 
 
 
