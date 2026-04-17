@@ -82,7 +82,7 @@ const App = (() => {
   // Keep-alive toutes les 5 min
   setInterval(() => {
     fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
-  }, 300000);
+  }, 60000);
 
   // Démarrer au chargement
   document.addEventListener('DOMContentLoaded', init);
@@ -114,6 +114,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 

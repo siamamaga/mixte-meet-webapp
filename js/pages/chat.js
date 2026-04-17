@@ -174,7 +174,7 @@ const ChatPage = (() => {
     if (msg.sent) {
       if (msg.is_read) {
         statusIcon = '<span style="color:#53bdeb;font-size:12px;margin-left:3px;">✓✓</span>';
-      } else if (msg.delivered || !isDemo()) {
+      } else if (msg.id) {
         statusIcon = '<span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:3px;">✓✓</span>';
       } else {
         statusIcon = '<span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:3px;">✓</span>';
@@ -369,6 +369,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
