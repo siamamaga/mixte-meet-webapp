@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixte-Meet — Paiement réussi</title>
+<meta name="theme-color" content="#E8317A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0D0810; color:white; font-family:Outfit,sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .container { width:100%; max-width:420px; text-align:center; }
+  .icon { font-size:80px; margin-bottom:24px; animation: pop 0.5s ease; }
+  @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  h1 { font-family:'Playfair Display',serif; font-size:28px; margin-bottom:12px; }
+  p { color:rgba(255,255,255,0.6); font-size:15px; margin-bottom:32px; line-height:1.6; }
+  .btn { display:block; padding:16px; background:linear-gradient(135deg,#E8317A,#C41F65); border-radius:50px; color:white; font-weight:700; font-size:16px; text-decoration:none; margin-bottom:12px; }
+  .plan-badge { display:inline-block; background:rgba(232,49,122,0.2); border:1px solid rgba(232,49,122,0.4); padding:8px 20px; border-radius:50px; font-size:14px; color:#E8317A; font-weight:600; margin-bottom:24px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="icon">🎉</div>
+  <h1>Paiement réussi !</h1>
+  <div class="plan-badge" id="plan-badge">Premium activé ✨</div>
+  <p>Merci pour votre abonnement à Mixte-Meet. Votre compte a été mis à jour et vous pouvez profiter de toutes les fonctionnalités premium.</p>
+  <a href="/" class="btn">Continuer sur Mixte-Meet 🦋</a>
+</div>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get('plan');
+  const plans = {
+    premium_monthly: 'Premium Mensuel activé ✨',
+    premium_quarterly: 'Premium Trimestriel activé ✨',
+    premium_yearly: 'Premium Annuel activé ✨',
+    coins_100: '100 Coins ajoutés 🪙',
+    coins_500: '500 Coins ajoutés 🪙',
+    coins_1000: '1000 Coins ajoutés 🪙',
+  };
+  if (plan && plans[plan]) {
+    document.getElementById('plan-badge').textContent = plans[plan];
+  }
+</script>
+</body>
+</html>
