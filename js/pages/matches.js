@@ -3,8 +3,8 @@ const MatchesPage = (() => {
   let matches = [];
 
   const DEMO_MATCHES = [
-    { id:1, uuid:'m1', first_name:'Amina', age:26, country_code:'CI', city:'Abidjan', emoji:'👩🏾', online:true, unread:2, last_message:'Bonjour !', last_message_at: new Date(Date.now()-300000).toISOString(), conversation_id:1 },
-    { id:2, uuid:'m2', first_name:'Laure', age:28, country_code:'FR', city:'Lyon', emoji:'👩🏼', online:false, unread:0, last_message:"J'adore ca !", last_message_at: new Date(Date.now()-1800000).toISOString(), conversation_id:2 },
+    { id:1, uuid:'m1', first_name:'Amina', age:26, country_code:'CI', city:'Abidjan', emoji:'👩🏾', online:true, unread:2, last_message:'Bonjour !', last_message_at: new Date(Date.now()-600000).toISOString(), conversation_id:1 },
+    { id:2, uuid:'m2', first_name:'Laure', age:28, country_code:'FR', city:'Lyon', emoji:'👩🏼', online:false, unread:0, last_message:"J'adore ca !", last_message_at: new Date(Date.now()-3600000).toISOString(), conversation_id:2 },
   ];
 
   function openMatch(uuid) {
@@ -22,9 +22,9 @@ const MatchesPage = (() => {
         const rawDate = m.last_active_at ? m.last_active_at : null;
         const lastActive = rawDate ? new Date(rawDate) : null;
         const diff = lastActive ? (Date.now() - lastActive) : Infinity;
-        m.online = diff < 300000;
-        m.absent = diff >= 300000 && diff < 1800000;
-        m.onlineColor = diff < 300000 ? '#22c55e' : (diff < 1800000 ? '#f59e0b' : null);
+        m.online = diff < 600000;
+        m.absent = diff >= 600000 && diff < 3600000;
+        m.onlineColor = diff < 600000 ? '#22c55e' : (diff < 3600000 ? '#f59e0b' : null);
         return m;
       });
       } else {
@@ -117,6 +117,7 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
 
 
 
