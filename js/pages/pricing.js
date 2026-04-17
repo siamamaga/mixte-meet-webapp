@@ -205,7 +205,7 @@ const PricingPage = (() => {
   }
 
   function render(targetEl) {
-    const container = targetEl || document.getElementById('modal-content');
+    const container = targetEl || document.getElementById('page-pricing') || document.getElementById('modal-content');
     if (!container) return;
 
     // Démarrer les comptes à rebours
@@ -318,5 +318,6 @@ const PricingPage = (() => {
     },
   };
 })();
+
 
 
