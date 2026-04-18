@@ -149,6 +149,7 @@ const ChatPage = (() => {
             '<div style="font-size:15px;font-weight:600;">' + name + '</div>' +
             '<div style="font-size:11px;color:' + (online ? 'var(--green)' : 'var(--muted)') + ';">' + (online ? '&#9679; En ligne' : 'Hors ligne') + '</div>' +
           '</div>' +
+          '<button class="header-btn" onclick="ChatPage.startVideoCall()" title="Appel vidéo">📹</button>' +
           '<button class="header-btn" onclick="ChatPage.showOptions()">&#8943;</button>' +
         '</div>' +
         '<div class="chat-messages" id="chat-messages">' +
@@ -271,6 +272,16 @@ const ChatPage = (() => {
       }
     },
 
+    startVideoCall() {
+      const user = AuthService.getUser();
+      if (!user?.is_premium) {
+        Toast.info('Appels vidéo HD — fonctionnalité Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      if (!currentMatch || !currentConvId) return;
+      VideoCall.startCall({ ...currentMatch, userId: currentMatch.id }, currentConvId);
+    },
     showOptions() {
       if (!currentMatch) return;
       const name = currentMatch.first_name || 'cet utilisateur';
@@ -374,6 +385,8 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
 
 
 
