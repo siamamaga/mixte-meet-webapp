@@ -20,6 +20,7 @@ const App = (() => {
     settings: { el: 'page-settings', module: SettingsPage, navBtn: 'profile' },
     search:   { el: 'page-search',  module: SearchPage,   navBtn: 'search' },
     pricing:  { el: 'page-pricing', module: PricingPage,  navBtn: 'profile' },
+},
 
   // ── Navigation ─────────────────────────────────────────
   function navigate(page) {
