@@ -2,14 +2,12 @@
 // Parse date depuis format MySQL DD/MM/YYYY HH:MM:SS ou YYYY-MM-DD HH:MM:SS
 function parseDate(str) {
   if (!str) return null;
-  // Format DD/MM/YYYY HH:MM:SS
   const m1 = str.match(/^(\d{2})\/(\d{2})\/(\d{4})\s(\d{2}):(\d{2}):(\d{2})/);
   if (m1) return new Date(m1[3], m1[2]-1, m1[1], m1[4], m1[5], m1[6]);
-  // Format YYYY-MM-DD HH:MM:SS
   return new Date(str.replace(' ', 'T'));
 }
-// Mixte-Meet SPA Router
 
+// Mixte-Meet SPA Router
 const App = (() => {
   let currentPage = 'feed';
   const pages = {
@@ -18,46 +16,33 @@ const App = (() => {
     chat:     { el: 'page-chat',     module: ChatPage,     navBtn: 'matches' },
     profile:  { el: 'page-profile',  module: ProfilePage,  navBtn: 'profile' },
     settings: { el: 'page-settings', module: SettingsPage, navBtn: 'profile' },
-    search:   { el: 'page-search',  module: SearchPage,   navBtn: 'search' },
-    pricing:  { el: 'page-pricing', module: PricingPage,  navBtn: 'profile' },
-},
+    search:   { el: 'page-search',   module: SearchPage,   navBtn: 'search' },
+    pricing:  { el: 'page-pricing',  module: PricingPage,  navBtn: 'profile' },
+  };
 
-  // ── Navigation ─────────────────────────────────────────
+  // Navigation
   function navigate(page) {
     if (!pages[page]) return;
     currentPage = page;
-
-    // Masquer toutes les pages
     document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    // Afficher la page cible
     const el = document.getElementById(pages[page].el);
     if (el) { el.classList.remove('hidden'); el.classList.add('active'); }
-
-    // Mettre à jour la nav
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.querySelector(`[data-page="${pages[page].navBtn}"]`);
+    const activeBtn = document.querySelector('[data-page="' + pages[page].navBtn + '"]');
     if (activeBtn) activeBtn.classList.add('active');
-
-    // Masquer/montrer la bottom nav (chat = fullscreen)
     const nav = document.getElementById('bottom-nav');
     if (nav) nav.style.display = (page === 'chat' || page === 'settings') ? 'none' : 'flex';
-
-    // Render la page
     const mod = pages[page].module;
-    if (mod?.render) mod.render();
+    if (mod && mod.render) mod.render();
   }
 
-  // ── Démarrage ──────────────────────────────────────────
+  // Demarrage
   async function init() {
-    // Simuler un temps de chargement
     await new Promise(r => setTimeout(r, 1200));
-
     const loader = document.getElementById('app-loader');
     const app    = document.getElementById('app');
-
     loader.classList.add('fade-out');
     setTimeout(() => { loader.style.display = 'none'; app.classList.remove('hidden'); }, 500);
-
     if (AuthService.isLoggedIn()) {
       showApp();
     } else {
@@ -76,19 +61,26 @@ const App = (() => {
     document.getElementById('view-app').classList.remove('hidden');
     navigate('feed');
     SocketService.connect();
+    // Sync user toutes les 30s
+    async function syncUser() {
+      try {
+        const res = await API.get('/me?t=' + Date.now());
+        if (res && res.data) AuthService.updateUser(res.data);
+      } catch(e) {}
+    }
+    syncUser();
+    setInterval(syncUser, 30000);
   }
 
-  // Wake-up immediat au demarrage
+  // Wake-up et keep-alive
   fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
-  // Keep-alive toutes les 5 min
-  setInterval(() => {
+  setInterval(function() {
     fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
   }, 60000);
 
-  // Démarrer au chargement
   document.addEventListener('DOMContentLoaded', init);
 
-  // Gestion du bouton retour hardware (Android) + navigateur
+  // Bouton retour navigateur
   history.pushState(null, '', window.location.href);
   window.addEventListener('popstate', function() {
     history.pushState(null, '', window.location.href);
@@ -107,27 +99,12 @@ const App = (() => {
       navigate('matches');
     } else if (currentPage === 'settings') {
       navigate('profile');
+    } else if (currentPage === 'pricing') {
+      navigate('profile');
     } else {
       navigate('feed');
     }
   });
 
-
   return { navigate, showAuth, showApp };
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
