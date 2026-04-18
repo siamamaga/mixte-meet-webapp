@@ -242,5 +242,17 @@ const VideoCall = (() => {
     }
   }
 
+_handleIncoming(signal, conv) {
+      if (isCallActive) return;
+      currentConvId = conv.conversation_id;
+      currentMatch = { ...conv, userId: signal.from };
+      showCallUI(currentMatch, false);
+      if (!peerConnection) {
+        peerConnection = new RTCPeerConnection(ICE_SERVERS);
+        peerConnection._pendingOffer = signal.data;
+      }
+      startSignalPolling(currentConvId, signal.from);
+    },
+    return { startCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, _handleIncoming };
   return { startCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera };
 })();

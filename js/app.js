@@ -72,6 +72,26 @@ const App = (() => {
     setInterval(syncUser, 30000);
   }
 
+  // Écouter les appels entrants
+  async function listenIncomingCalls() {
+    try {
+      const matches = await API.get('/matches');
+      const convs = matches?.data || [];
+      for (const conv of convs) {
+        if (!conv.conversation_id) continue;
+        const res = await API.get('/call/' + conv.conversation_id + '/signal');
+        const signals = res?.data || [];
+        for (const signal of signals) {
+          if (signal.type === 'offer') {
+            VideoCall._handleIncoming(signal, conv);
+            return;
+          }
+        }
+      }
+    } catch(e) {}
+  }
+  setInterval(listenIncomingCalls, 3000);
+
   // Wake-up et keep-alive
   fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
   setInterval(function() {
