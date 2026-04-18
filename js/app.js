@@ -18,8 +18,8 @@ const App = (() => {
     chat:     { el: 'page-chat',     module: ChatPage,     navBtn: 'matches' },
     profile:  { el: 'page-profile',  module: ProfilePage,  navBtn: 'profile' },
     settings: { el: 'page-settings', module: SettingsPage, navBtn: 'profile' },
-    search:   { el: 'page-search',pricing:  { el: 'page-pricing',  module: PricingPage,  navBtn: 'profile' },   module: SearchPage,   navBtn: 'search' },
-  };
+    search:   { el: 'page-search',  module: SearchPage,   navBtn: 'search' },
+    pricing:  { el: 'page-pricing', module: PricingPage,  navBtn: 'profile' },
 
   // ── Navigation ─────────────────────────────────────────
   function navigate(page) {
