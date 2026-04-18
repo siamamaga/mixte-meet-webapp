@@ -284,7 +284,7 @@ const PricingPage = (() => {
           <p style="font-size:18px;font-weight:700;color:var(--pink);margin-bottom:20px;">${currency === 'xof' ? price.toLocaleString('fr-FR') : price.toFixed(2)} ${curr}</p>
 
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <button onclick="PricingPage.payWithFedaPay('')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,204,0,0.15);border:1.5px solid rgba(255,204,0,0.4);color:#FFD700;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
+            <button onclick="PricingPage.payWithFedaPay('${planId}')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,204,0,0.15);border:1.5px solid rgba(255,204,0,0.4);color:#FFD700;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
               📱 MTN / Moov / Wave (Mobile Money)
             </button>
             <button onclick="Modal.close();Toast.info('Stripe — Bientôt disponible')" style="width:100%;padding:13px;border-radius:50px;background:rgba(232,49,122,0.15);border:1.5px solid rgba(232,49,122,0.4);color:var(--pink-light);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
@@ -318,6 +318,7 @@ const PricingPage = (() => {
     },
   };
 })();
+
 
 
 
