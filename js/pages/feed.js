@@ -214,9 +214,30 @@ const FeedPage = (() => {
     render,
     getCurrentProfile() { return profiles[currentIdx] || null; },
 
+    undo() {
+      const user = AuthService.getUser();
+      if (!user?.is_premium) {
+        Toast.info('Annuler un swipe est une fonctionnalité Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      if (currentIdx <= 0) { Toast.info('Aucun swipe à annuler'); return; }
+      currentIdx--;
+      showProfile(profiles[currentIdx]);
+      Toast.success('Swipe annulé ↩️');
+    },
     async swipe(action) {
       const profile = profiles[currentIdx];
       if(!profile) return;
+      // Vérifier limite super like
+      if (action === 'super_like') {
+        const user = AuthService.getUser();
+        if (!user?.is_premium) {
+          Toast.info('Super Likes illimités avec Premium ⭐');
+          App.navigate('pricing');
+          return;
+        }
+      }
       animateSwipe(action==='like'||action==='super_like' ? 'like' : 'dislike');
       try {
         if(profile.profile_type !== 'demo') {
@@ -287,6 +308,8 @@ const FeedPage = (() => {
     },
   };
 })();
+
+
 
 
 
