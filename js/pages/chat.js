@@ -112,6 +112,8 @@ const ChatPage = (() => {
           sent: msg.sender_uuid === myUuid,
           content: msg.content,
           is_read: msg.is_read,
+          voice_url: msg.voice_url || null,
+          duration: msg.duration || 0,
           time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
         }));
         const hasNewMsg = newMsgs.length > messages.length;
@@ -190,7 +192,12 @@ const ChatPage = (() => {
     return '<div class="chat-message ' + (msg.sent ? 'sent' : 'recv') + '">' +
       (!msg.sent ? '<div class="msg-avatar">' + avatar + '</div>' : '') +
       '<div>' +
-        '<div class="msg-bubble">' + (msg.content || '') + '</div>' +
+        (msg.voice_url
+        ? '<div class="msg-bubble" style="padding:8px 12px;min-width:160px;">' +
+            '<audio controls style="width:100%;max-width:220px;height:36px;" src="' + msg.voice_url + '"></audio>' +
+            '<div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px;">🎙️ ' + (msg.duration || 0) + 's</div>' +
+          '</div>'
+        : '<div class="msg-bubble">' + (msg.content || '') + '</div>') +
         '<div class="msg-time">' + msg.time + statusIcon + '</div>' +
       '</div>' +
     '</div>';
@@ -405,6 +412,8 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
 
 
 
