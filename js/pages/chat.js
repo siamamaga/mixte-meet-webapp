@@ -149,6 +149,7 @@ const ChatPage = (() => {
             '<div style="font-size:15px;font-weight:600;">' + name + '</div>' +
             '<div style="font-size:11px;color:' + (online ? 'var(--green)' : 'var(--muted)') + ';">' + (online ? '&#9679; En ligne' : 'Hors ligne') + '</div>' +
           '</div>' +
+          '<button class="header-btn" onclick="ChatPage.startAudioCall()" title="Appel audio">📞</button>' +
           '<button class="header-btn" onclick="ChatPage.startVideoCall()" title="Appel vidéo">📹</button>' +
           '<button class="header-btn" onclick="ChatPage.showOptions()">&#8943;</button>' +
         '</div>' +
@@ -158,7 +159,7 @@ const ChatPage = (() => {
           '<div id="typing-zone"></div>' +
         '</div>' +
         '<div class="chat-input-bar">' +
-          '<button class="header-btn" onclick="Toast.info(\'Cadeaux - Premium\')">&#127873;</button>' +
+          '<button class="header-btn" id="btn-voice-record" onclick="ChatPage.toggleVoiceRecord()" title="Message vocal">🎙️</button>' +
           '<textarea class="chat-input-field" id="msg-input" placeholder="Votre message..." rows="1" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();ChatPage.send();}"></textarea>' +
           '<button class="chat-send-btn" onclick="ChatPage.send()">&#10148;</button>' +
         '</div>' +
@@ -272,6 +273,25 @@ const ChatPage = (() => {
       }
     },
 
+    startAudioCall() {
+      const user = AuthService.getUser();
+      if (!user?.is_premium) {
+        Toast.info('Appels audio — fonctionnalité Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      if (!currentMatch || !currentConvId) return;
+      VideoCall.startAudioCall({ ...currentMatch, userId: currentMatch.id }, currentConvId);
+    },
+    toggleVoiceRecord() {
+      const user = AuthService.getUser();
+      if (!user?.is_premium) {
+        Toast.info('Messages vocaux — fonctionnalité Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      VoiceMessage.toggle(currentConvId, currentMatch);
+    },
     startVideoCall() {
       const user = AuthService.getUser();
       if (!user?.is_premium) {
@@ -385,6 +405,9 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
+
 
 
 
