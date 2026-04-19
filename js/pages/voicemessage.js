@@ -287,7 +287,7 @@ const VoiceMessage = (() => {
         method: 'POST', body: formData
       });
       const data = await res.json();
-      console.log('Cloudinary response:', JSON.stringify(data));
+      console.log('Cloudinary response OK, convId:', currentConvId, 'url:', data.secure_url);
       if (!data.secure_url) throw new Error('Upload échoué: ' + JSON.stringify(data));
 
       if (currentConvId) {
@@ -317,5 +317,6 @@ const VoiceMessage = (() => {
 
   return { toggle, cancel, stopRecording, startRecording, togglePlay, seekTo, send };
 })();
+
 
 
