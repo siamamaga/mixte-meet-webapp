@@ -215,5 +215,46 @@ const VideoCall = (() => {
     }
   }
 
+function startAudioCall(match, convId) {
+    // Appel audio = appel video sans camera
+    const user = AuthService.getUser();
+    if (!user || !user.is_premium) {
+      Toast.info('Appels audio — fonctionnalité Premium ⭐');
+      App.navigate('pricing');
+      return;
+    }
+    currentMatch = match;
+    currentConvId = convId;
+    isCallActive = true;
+    showCallUI(match, true);
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream) {
+      localStream = stream;
+      peerConnection = new RTCPeerConnection(ICE_SERVERS);
+      stream.getTracks().forEach(function(track) { peerConnection.addTrack(track, stream); });
+      peerConnection.ontrack = function(event) {
+        remoteStream = event.streams[0];
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.play();
+        const st = document.getElementById('call-status');
+        if (st) st.textContent = 'Connecté ✓';
+      };
+      peerConnection.onicecandidate = function(event) {
+        if (event.candidate) {
+          API.post('/call/' + convId + '/signal', { type: 'ice-candidate', data: event.candidate, to: match.userId }).catch(function() {});
+        }
+      };
+      peerConnection.createOffer().then(function(offer) {
+        return peerConnection.setLocalDescription(offer).then(function() {
+          return API.post('/call/' + convId + '/signal', { type: 'offer', data: offer, to: match.userId });
+        });
+      }).then(function() {
+        startSignalPolling(convId, match.userId);
+      });
+    }).catch(function() {
+      Toast.error('Impossible d\'accéder au micro');
+      endCall();
+    });
+  }
   return { startCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, _handleIncoming };
 })();
