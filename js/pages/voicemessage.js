@@ -174,11 +174,15 @@ const VoiceMessage = (() => {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                   MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' :
+                   MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : '';
+      mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
       mediaRecorder.ondataavailable = function(e) { if (e.data.size > 0) audioChunks.push(e.data); };
       mediaRecorder.onstop = function() {
         stream.getTracks().forEach(function(t) { t.stop(); });
-        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const blobType = mediaRecorder.mimeType || 'audio/webm';
+      recordedBlob = new Blob(audioChunks, { type: blobType });
         showPreview();
       };
       mediaRecorder.start(100);
