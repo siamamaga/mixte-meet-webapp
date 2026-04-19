@@ -90,7 +90,7 @@ const App = (() => {
       }
     } catch(e) {}
   }
-  setInterval(listenIncomingCalls, 3000);
+  setInterval(listenIncomingCalls, 10000);
 
   // Wake-up et keep-alive
   fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
@@ -128,3 +128,4 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
