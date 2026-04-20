@@ -207,19 +207,11 @@ const VideoCall = (() => {
     peerConnection = new RTCPeerConnection(ICE_SERVERS);
     if (localStream) localStream.getTracks().forEach(function(t) { peerConnection.addTrack(t, localStream); });
     peerConnection.ontrack = onRemoteTrack;
-    peerConnection.onicecandidate = function(e) {
-      if (e.candidate) {
-        API.post('/call/' + convId + '/signal', { type: 'ice-candidate', data: e.candidate, to: toUserId }).catch(function() {});
-      }
-    };
-    peerConnection.onconnectionstatechange = function() {
-      var state = peerConnection.connectionState;
-      if (state === 'disconnected' || state === 'failed') {
-        var dur = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
-        Toast.info('Appel terminé · ' + Math.floor(dur / 60) + ':' + String(dur % 60).padStart(2, '0'));
-        endCall();
-      }
-    };
+   peerConnection.onicecandidate = function(e) {
+        if (e.candidate && currentMatch && currentMatch.userId) {
+          API.post('/call/' + convId + '/signal', { type: 'ice-candidate', data: e.candidate, to: currentMatch.userId }).catch(function() {});
+        }
+      };
     return peerConnection;
   }
 
