@@ -291,7 +291,7 @@ const ChatPage = (() => {
         return;
       }
       if (!currentMatch || !currentConvId) return;
-      VideoCall.startAudioCall({ ...currentMatch, userId: currentMatch.id }, currentConvId);
+      VideoCall.startAudioCall({ ...currentMatch, userId: currentMatch.partner_id }, currentConvId);
     },
     startIncomingCallPolling() {
       if (!currentConvId) return;
@@ -328,7 +328,7 @@ const ChatPage = (() => {
         return;
       }
       if (!currentMatch || !currentConvId) return;
-      VideoCall.startCall({ ...currentMatch, userId: currentMatch.id }, currentConvId);
+      VideoCall.startCall({ ...currentMatch, userId: currentMatch.partner_id }, currentConvId);
     },
     showOptions() {
       if (!currentMatch) return;
@@ -433,6 +433,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
