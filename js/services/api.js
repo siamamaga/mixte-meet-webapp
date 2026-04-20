@@ -14,7 +14,13 @@ const API = (() => {
     try {
       const res  = await fetch(BASE + path, opts);
       const data = await res.json();
-      if (!res.ok) throw { status: res.status, message: data.message || 'Erreur serveur' };
+      if (!res.ok) {
+        if (res.status === 401) {
+          AuthService.logout();
+          location.reload();
+        }
+        throw { status: res.status, message: data.message || 'Erreur serveur' };
+      }
       return data;
     } catch (err) {
       if (err.status) throw err;
@@ -30,3 +36,4 @@ const API = (() => {
     upload: (path, formData)   => request('POST',   path, formData, true),
   };
 })();
+

@@ -28,11 +28,12 @@ const MatchesPage = (() => {
         return m;
       });
       } else {
-        matches = DEMO_MATCHES;
+        matches = [];
       }
     } catch(e) {
       console.log('Matches error:', e);
-      matches = DEMO_MATCHES;
+      if (e && e.status === 401) { AuthService.logout(); App.showAuth ? App.showAuth() : location.reload(); }
+      matches = [];
     }
   }
 
@@ -117,6 +118,7 @@ const MatchesPage = (() => {
 
   return { render, openMatch };
 })();
+
 
 
 
