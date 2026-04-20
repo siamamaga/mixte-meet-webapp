@@ -258,7 +258,16 @@ const VideoCall = (() => {
     startRingtone(false);
     startRingTimeout();
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      // Demander permission micro explicitement
+      var stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      } catch(permErr) {
+        Toast.error('Autorisez l\'accès au microphone dans votre navigateur');
+        endCall(false);
+        return;
+      }
+      localStream = stream;
       createPC();
       var offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
@@ -279,8 +288,23 @@ const VideoCall = (() => {
     showCallUI(match, true, false);
     startRingtone(false);
     startRingTimeout();
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+try {
+      var stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+      } catch(permErr) {
+        // Fallback audio seulement
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          isAudioOnly = true;
+          showCallUI(match, true, true);
+        } catch(e) {
+          Toast.error('Autorisez l\'accès au microphone dans votre navigateur');
+          endCall(false);
+          return;
+        }
+      }
+      localStream = stream;
       var lv = document.getElementById('local-video');
       var pip = document.getElementById('pip-container');
       if (lv) lv.srcObject = localStream;
