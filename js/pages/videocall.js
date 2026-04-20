@@ -22,16 +22,7 @@ const VideoCall = (() => {
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      {
-        urls: [
-          'turn:fr-turn4.xirsys.com:80?transport=udp',
-          'turn:fr-turn4.xirsys.com:3478?transport=udp',
-          'turn:fr-turn4.xirsys.com:443?transport=tcp',
-        ],
-        username: 'mixtemeet',
-        credential: 'mixtemeet2026'
-      }
+      { urls: 'turn:relay.backups.cz:443?transport=tcp', username: 'webrtc', credential: 'webrtc' }
     ]
   };
 
@@ -523,4 +514,5 @@ try {
 
   return { startCall, startAudioCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, flipCamera, toggleSpeaker, _handleIncoming };
 })();
+
 
