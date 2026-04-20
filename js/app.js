@@ -72,7 +72,17 @@ const App = (() => {
     setInterval(syncUser, 30000);
   }
 
-  // Appels entrants - polling léger sur conversation active uniquement
+  // Polling appels entrants global (léger - 1 seule requête toutes les 5s)
+  setInterval(async function() {
+    if (typeof VideoCall === 'undefined') return;
+    try {
+      const res = await API.get('/call/incoming');
+      if (res && res.data) {
+        const { signal, convId } = res.data;
+        VideoCall._handleIncoming(signal, { conversation_id: convId });
+      }
+    } catch(e) {}
+  }, 5000);
 
   // Wake-up et keep-alive
   fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
@@ -110,5 +120,6 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
