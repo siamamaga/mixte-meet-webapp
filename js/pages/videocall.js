@@ -83,7 +83,7 @@ const VideoCall = (() => {
                 (icon + ' Appel · ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0'));
     API.post('/conversations/' + currentConvId + '/messages?t=' + Date.now(), {
       content: label,
-      type: 'call'
+      type: 'text'
     }).catch(function(){});
   }
 
