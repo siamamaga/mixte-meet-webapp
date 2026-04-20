@@ -429,7 +429,7 @@ try {
         var sigs = (res && res.data) ? res.data : [];
         for (var i = 0; i < sigs.length; i++) { await handleSignal(sigs[i]); }
       } catch(e) {}
-    }, 1500);
+    }, 800);
   }
 
   function stopSignalPolling() {
