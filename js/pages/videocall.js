@@ -22,10 +22,15 @@ const VideoCall = (() => {
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
       {
-        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
+        urls: [
+          'turn:fr-turn4.xirsys.com:80?transport=udp',
+          'turn:fr-turn4.xirsys.com:3478?transport=udp',
+          'turn:fr-turn4.xirsys.com:443?transport=tcp',
+        ],
+        username: 'mixtemeet',
+        credential: 'mixtemeet2026'
       }
     ]
   };

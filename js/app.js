@@ -76,6 +76,7 @@ const App = (() => {
   setInterval(async function() {
     if (typeof VideoCall === 'undefined') return;
     try {
+      if (!AuthService.getToken()) return;
       const res = await API.get('/call/incoming?t=' + Date.now());
       if (res && res.data) {
         const { signal, convId } = res.data;
@@ -120,6 +121,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
