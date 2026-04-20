@@ -45,6 +45,8 @@ const ChatPage = (() => {
 
     // Charger les messages avec le bon openId
     loadMessages(myOpenId);
+    ChatPage.stopIncomingCallPolling();
+    ChatPage.startIncomingCallPolling();
   }
 
   async function loadMessages(myOpenId) {
@@ -220,6 +222,7 @@ const ChatPage = (() => {
     render,
 
     close() {
+      ChatPage.stopIncomingCallPolling();
       stopPolling();
       currentMatch = null;
       currentConvId = null;
@@ -289,6 +292,24 @@ const ChatPage = (() => {
       }
       if (!currentMatch || !currentConvId) return;
       VideoCall.startAudioCall({ ...currentMatch, userId: currentMatch.id }, currentConvId);
+    },
+    startIncomingCallPolling() {
+      if (!currentConvId) return;
+      ChatPage._incomingPoll = setInterval(async function() {
+        if (!currentConvId) return;
+        try {
+          const res = await API.get('/call/' + currentConvId + '/signal');
+          const sigs = res && res.data ? res.data : [];
+          for (let i = 0; i < sigs.length; i++) {
+            if (sigs[i].type === 'offer') {
+              VideoCall._handleIncoming(sigs[i], { conversation_id: currentConvId, ...currentMatch });
+            }
+          }
+        } catch(e) {}
+      }, 3000);
+    },
+    stopIncomingCallPolling() {
+      if (ChatPage._incomingPoll) { clearInterval(ChatPage._incomingPoll); ChatPage._incomingPoll = null; }
     },
     toggleVoiceRecord() {
       const user = AuthService.getUser();
@@ -412,6 +433,9 @@ const ChatPage = (() => {
     },
   };
 })();
+
+
+
 
 
 
