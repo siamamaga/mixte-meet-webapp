@@ -1,4 +1,4 @@
-// js/pages/videocall.js — Pro Final
+// js/pages/videocall.js — Pro Final v2
 const VideoCall = (() => {
   let localStream = null;
   let remoteStream = null;
@@ -19,20 +19,9 @@ const VideoCall = (() => {
   let pendingOffer = null;
   let pendingFrom = null;
 
- const ICE_SERVERS = {
+  const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
       {
         urls: 'turn:openrelay.metered.ca:443?transport=tcp',
         username: 'openrelayproject',
@@ -41,7 +30,7 @@ const VideoCall = (() => {
     ]
   };
 
-  // ── Sonnerie Web Audio
+  // ── Sonnerie
   function startRingtone(isIncoming) {
     stopRingtone();
     try {
@@ -72,7 +61,7 @@ const VideoCall = (() => {
     if (ringtoneCtx) { try { ringtoneCtx.close(); } catch(e) {} ringtoneCtx = null; }
   }
 
-  // ── Timeout 30s
+  // ── Timeout 30s sans réponse
   function startRingTimeout() {
     clearTimeout(ringTimeout);
     ringTimeout = setTimeout(function() {
@@ -88,17 +77,16 @@ const VideoCall = (() => {
 
   function clearRingTimeout() { clearTimeout(ringTimeout); }
 
-  // ── Sauvegarder historique appel dans le chat
+  // ── Historique appel dans le chat
   function saveCallHistory(status) {
     if (!currentConvId) return;
     var dur = callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
     var icon = isAudioOnly ? '📞' : '📹';
-    var label = status === 'missed' ? (icon + ' Appel manqué') :
+    var label = status === 'missed'   ? (icon + ' Appel manqué') :
                 status === 'rejected' ? (icon + ' Appel refusé') :
                 (icon + ' Appel · ' + Math.floor(dur/60) + ':' + String(dur%60).padStart(2,'0'));
     API.post('/conversations/' + currentConvId + '/messages?t=' + Date.now(), {
-      content: label,
-      type: 'text'
+      content: label, type: 'text'
     }).catch(function(){});
   }
 
@@ -119,48 +107,49 @@ const VideoCall = (() => {
 
     var ui = document.createElement('div');
     ui.id = 'call-ui';
-    ui.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;font-family:Outfit,sans-serif;background:' + (audioOnly ? 'linear-gradient(160deg,#1a0d2e,#0D0810)' : '#0a0614') + ';';
+    ui.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;font-family:Outfit,sans-serif;background:' +
+      (audioOnly ? 'linear-gradient(160deg,#1a0d2e,#0D0810)' : '#0a0614') + ';';
 
-    var controls = calling
-      ? // Contrôles appel actif
-        '<div style="display:flex;justify-content:space-around;align-items:flex-end;padding-bottom:8px;">' +
-          // Mute
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-            '<button id="btn-mute" onclick="VideoCall.toggleMute()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">🎤</button>' +
-            '<span style="font-size:10px;color:rgba(255,255,255,0.5);">Micro</span>' +
-          '</div>' +
-          // Raccrocher
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-            '<button onclick="VideoCall.endCall(true)" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#B91C1C);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(239,68,68,0.7);">📵</button>' +
-            '<span style="font-size:10px;color:#EF4444;font-weight:700;">Raccrocher</span>' +
-          '</div>' +
-          // Caméra ou HP
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-            (audioOnly
-              ? '<button id="btn-speaker" onclick="VideoCall.toggleSpeaker()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">🔊</button><span style="font-size:10px;color:rgba(255,255,255,0.5);">HP</span>'
-              : '<button id="btn-cam" onclick="VideoCall.toggleCamera()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">📷</button><span style="font-size:10px;color:rgba(255,255,255,0.5);">Caméra</span>') +
-          '</div>' +
+    var activeControls =
+      '<div style="display:flex;justify-content:space-around;align-items:flex-end;padding-bottom:8px;">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+          '<button id="btn-mute" onclick="VideoCall.toggleMute()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">🎤</button>' +
+          '<span style="font-size:10px;color:rgba(255,255,255,0.5);">Micro</span>' +
         '</div>' +
-        // 2e ligne (vidéo seulement) : retourner caméra + flip
-        (!audioOnly
-          ? '<div style="display:flex;justify-content:center;gap:24px;margin-top:8px;">' +
-              '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
-                '<button onclick="VideoCall.flipCamera()" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:white;font-size:18px;cursor:pointer;">🔄</button>' +
-                '<span style="font-size:10px;color:rgba(255,255,255,0.5);">Retourner</span>' +
-              '</div>' +
-            '</div>'
-          : '')
-      : // Contrôles appel entrant
-        '<div style="display:flex;justify-content:space-around;align-items:center;">' +
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">' +
-            '<button onclick="VideoCall.rejectCall()" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#B91C1C);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(239,68,68,0.5);">📵</button>' +
-            '<span style="font-size:11px;color:#EF4444;">Refuser</span>' +
-          '</div>' +
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">' +
-            '<button onclick="VideoCall.acceptCall()" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#22C55E,#15803D);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(34,197,94,0.5);">📞</button>' +
-            '<span style="font-size:11px;color:#22C55E;">Répondre</span>' +
-          '</div>' +
-        '</div>';
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+          '<button onclick="VideoCall.endCall(true)" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#B91C1C);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(239,68,68,0.7);">📵</button>' +
+          '<span style="font-size:10px;color:#EF4444;font-weight:700;">Raccrocher</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+          (audioOnly
+            ? '<button id="btn-speaker" onclick="VideoCall.toggleSpeaker()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">🔊</button><span style="font-size:10px;color:rgba(255,255,255,0.5);">HP</span>'
+            : '<button id="btn-cam" onclick="VideoCall.toggleCamera()" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:22px;cursor:pointer;">📷</button><span style="font-size:10px;color:rgba(255,255,255,0.5);">Caméra</span>') +
+        '</div>' +
+      '</div>' +
+      (!audioOnly
+        ? '<div style="display:flex;justify-content:center;gap:24px;margin-top:8px;">' +
+            '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' +
+              '<button onclick="VideoCall.flipCamera()" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:white;font-size:18px;cursor:pointer;">🔄</button>' +
+              '<span style="font-size:10px;color:rgba(255,255,255,0.5);">Retourner</span>' +
+            '</div>' +
+          '</div>'
+        : '');
+
+    var incomingControls =
+      '<div style="display:flex;justify-content:space-around;align-items:center;">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">' +
+          '<button onclick="VideoCall.rejectCall()" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#EF4444,#B91C1C);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(239,68,68,0.5);">📵</button>' +
+          '<span style="font-size:11px;color:#EF4444;">Refuser</span>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;">' +
+          '<button onclick="VideoCall.acceptCall()" style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#22C55E,#15803D);border:none;color:white;font-size:28px;cursor:pointer;box-shadow:0 8px 32px rgba(34,197,94,0.5);">📞</button>' +
+          '<span style="font-size:11px;color:#22C55E;">Répondre</span>' +
+        '</div>' +
+      '</div>';
+
+    var statusText = calling
+      ? (audioOnly ? '📞 Appel audio...' : '📹 Appel vidéo...')
+      : (audioOnly ? '📞 Appel audio entrant' : '📹 Appel vidéo entrant');
 
     ui.innerHTML =
       '<style>' +
@@ -168,27 +157,23 @@ const VideoCall = (() => {
         '@keyframes fadein{from{opacity:0}to{opacity:1}}' +
       '</style>' +
       '<div id="call-main" style="flex:1;position:relative;overflow:hidden;">' +
-        // Vidéo distante
         '<video id="remote-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none;animation:fadein 0.5s;"></video>' +
-        // Avatar / info
         '<div id="call-info" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">' +
           '<div style="width:110px;height:110px;border-radius:50%;overflow:hidden;' + (!calling ? 'animation:cpulse 1.5s infinite;' : '') + 'border:3px solid rgba(232,49,122,0.6);">' + avatar + '</div>' +
           '<div style="font-size:22px;font-weight:700;color:white;">' + name + '</div>' +
-          '<div id="call-status" style="font-size:13px;color:rgba(255,255,255,0.6);">' +
-            (calling ? (audioOnly ? '📞 Appel audio...' : '📹 Appel vidéo...') : (audioOnly ? '📞 Appel audio entrant' : '📹 Appel vidéo entrant')) +
-          '</div>' +
+          '<div id="call-status" style="font-size:13px;color:rgba(255,255,255,0.6);">' + statusText + '</div>' +
           '<div id="call-timer" style="font-size:16px;font-weight:600;color:white;font-variant-numeric:tabular-nums;display:none;">0:00</div>' +
         '</div>' +
-        // PiP vidéo locale
         '<div id="pip-container" style="position:absolute;bottom:130px;right:12px;width:88px;height:128px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,0.4);box-shadow:0 4px 20px rgba(0,0,0,0.5);display:none;cursor:grab;z-index:100;">' +
           '<video id="local-video" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>' +
         '</div>' +
       '</div>' +
-      '<div style="padding:20px 16px 44px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);">' + controls + '</div>';
+      '<div style="padding:20px 16px 44px;background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);">' +
+        (calling ? activeControls : incomingControls) +
+      '</div>';
 
     document.body.appendChild(ui);
 
-    // PiP draggable (touch)
     var pip = document.getElementById('pip-container');
     if (pip) {
       pip.addEventListener('touchstart', function(e) {
@@ -206,7 +191,6 @@ const VideoCall = (() => {
     }
   }
 
-  // ── Timer
   function startCallTimer() {
     callStartTime = Date.now();
     var st = document.getElementById('call-status');
@@ -222,15 +206,14 @@ const VideoCall = (() => {
 
   function stopCallTimer() { clearInterval(callTimerInterval); callTimerInterval = null; }
 
-  // ── Quand la piste distante arrive
   function onRemoteTrack(event) {
     remoteStream = event.streams[0];
     stopRingtone();
     clearRingTimeout();
     if (isAudioOnly) {
-      var ra = document.getElementById('remote-audio') || document.createElement('audio');
-      ra.id = 'remote-audio'; ra.autoplay = true; ra.srcObject = remoteStream;
-      document.body.appendChild(ra);
+      var ra = document.getElementById('remote-audio');
+      if (!ra) { ra = document.createElement('audio'); ra.id = 'remote-audio'; document.body.appendChild(ra); }
+      ra.autoplay = true; ra.srcObject = remoteStream;
     } else {
       var rv = document.getElementById('remote-video');
       var ci = document.getElementById('call-info');
@@ -240,7 +223,6 @@ const VideoCall = (() => {
     startCallTimer();
   }
 
-  // ── Créer PeerConnection
   function createPC() {
     if (peerConnection) { try { peerConnection.close(); } catch(e) {} }
     peerConnection = new RTCPeerConnection(ICE_SERVERS);
@@ -254,10 +236,10 @@ const VideoCall = (() => {
       }
     };
     peerConnection.onconnectionstatechange = function() {
-      var s = peerConnection.connectionState;
+      var s = peerConnection ? peerConnection.connectionState : '';
       if (s === 'connected') {
         var st = document.getElementById('call-status');
-        if (st) { st.textContent = 'Connecté ✓'; }
+        if (st) st.textContent = 'Connecté ✓';
       }
       if (s === 'disconnected' || s === 'failed') {
         saveCallHistory('ended');
@@ -267,7 +249,7 @@ const VideoCall = (() => {
     return peerConnection;
   }
 
-  // ── Appel audio
+  // ── Appel audio sortant
   async function startAudioCall(match, convId) {
     var user = AuthService.getUser();
     if (!user || !user.is_premium) { Toast.info('Appels audio — Premium ⭐'); App.navigate('pricing'); return; }
@@ -289,7 +271,7 @@ const VideoCall = (() => {
     }
   }
 
-  // ── Appel vidéo
+  // ── Appel vidéo sortant
   async function startCall(match, convId) {
     var user = AuthService.getUser();
     if (!user || !user.is_premium) { Toast.info('Appels vidéo — Premium ⭐'); App.navigate('pricing'); return; }
@@ -324,8 +306,20 @@ const VideoCall = (() => {
     if (st) st.textContent = 'Connexion...';
 
     try {
-      var constraints = isAudioOnly ? { audio: true, video: false } : { video: { facingMode: 'user' }, audio: true };
-      localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      // Essayer avec caméra, fallback audio si échec
+      var gotStream = false;
+      if (!isAudioOnly) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+          gotStream = true;
+        } catch(e) {
+          console.warn('Caméra indisponible, fallback audio:', e.message);
+          isAudioOnly = true;
+        }
+      }
+      if (!gotStream) {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      }
 
       createPC();
 
@@ -345,12 +339,12 @@ const VideoCall = (() => {
         if (pip) pip.style.display = 'block';
       }
 
-      // Remettre la piste distante si déjà reçue
+      // Si piste distante déjà arrivée
       if (remoteStream) {
         if (isAudioOnly) {
-          var ra = document.getElementById('remote-audio') || document.createElement('audio');
-          ra.id = 'remote-audio'; ra.autoplay = true; ra.srcObject = remoteStream;
-          document.body.appendChild(ra);
+          var ra = document.getElementById('remote-audio');
+          if (!ra) { ra = document.createElement('audio'); ra.id = 'remote-audio'; document.body.appendChild(ra); }
+          ra.autoplay = true; ra.srcObject = remoteStream;
         } else {
           var rv = document.getElementById('remote-video');
           if (rv) { rv.srcObject = remoteStream; rv.style.display = 'block'; }
@@ -386,7 +380,7 @@ const VideoCall = (() => {
     clearRingTimeout();
     stopSignalPolling();
     stopCallTimer();
-    isMuted = false; isCamOff = false;
+    isMuted = false; isCamOff = false; isSpeakerOn = true;
     pendingOffer = null; pendingFrom = null;
     if (localStream) { localStream.getTracks().forEach(function(t) { t.stop(); }); localStream = null; }
     if (peerConnection) { try { peerConnection.close(); } catch(e) {} peerConnection = null; }
@@ -395,7 +389,7 @@ const VideoCall = (() => {
     currentMatch = null;
   }
 
-  // ── Polling signaux
+  // ── Polling signaux pendant appel
   function startSignalPolling() {
     stopSignalPolling();
     var convId = currentConvId;
@@ -406,7 +400,7 @@ const VideoCall = (() => {
         var sigs = (res && res.data) ? res.data : [];
         for (var i = 0; i < sigs.length; i++) { await handleSignal(sigs[i]); }
       } catch(e) {}
-    }, 1000);
+    }, 1500);
   }
 
   function stopSignalPolling() {
@@ -425,8 +419,7 @@ const VideoCall = (() => {
         }
       } catch(e) {}
     } else if (signal.type === 'reject') {
-      stopRingtone();
-      clearRingTimeout();
+      stopRingtone(); clearRingTimeout();
       Toast.info((currentMatch ? currentMatch.first_name : '') + ' a refusé l\'appel');
       endCall(false);
     } else if (signal.type === 'no-answer') {
@@ -439,7 +432,7 @@ const VideoCall = (() => {
     }
   }
 
-  // ── Appel entrant depuis global polling
+  // ── Appel entrant via polling global
   function _handleIncoming(signal, conv) {
     if (isCallActive) return;
     currentConvId = conv.conversation_id;
