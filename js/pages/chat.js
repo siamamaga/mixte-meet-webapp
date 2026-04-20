@@ -291,7 +291,10 @@ const ChatPage = (() => {
         return;
       }
       if (!currentMatch || !currentConvId) return;
-      VideoCall.startAudioCall({ ...currentMatch, userId: currentMatch.partner_id }, currentConvId);
+      const toId = currentMatch.partner_id || currentMatch.id || currentMatch.match_id;
+      console.log('startAudioCall userId:', toId, 'match:', JSON.stringify(currentMatch));
+      if (!toId) { Toast.error('Impossible de trouver le destinataire'); return; }
+      VideoCall.startAudioCall({ ...currentMatch, userId: toId }, currentConvId);
     },
     startIncomingCallPolling() {
       if (!currentConvId) return;
@@ -328,7 +331,8 @@ const ChatPage = (() => {
         return;
       }
       if (!currentMatch || !currentConvId) return;
-      VideoCall.startCall({ ...currentMatch, userId: currentMatch.partner_id }, currentConvId);
+      const toId2 = currentMatch.partner_id || currentMatch.id || currentMatch.match_id;
+      VideoCall.startCall({ ...currentMatch, userId: toId2 }, currentConvId);
     },
     showOptions() {
       if (!currentMatch) return;
@@ -433,6 +437,7 @@ const ChatPage = (() => {
     },
   };
 })();
+
 
 
 
