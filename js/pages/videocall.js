@@ -22,7 +22,7 @@ const VideoCall = (() => {
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'turn:relay.backups.cz:443?transport=tcp', username: 'webrtc', credential: 'webrtc' }
+      { urls: 'stun:stun.cloudflare.com:3478' }
     ]
   };
 
@@ -514,5 +514,6 @@ try {
 
   return { startCall, startAudioCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, flipCamera, toggleSpeaker, _handleIncoming };
 })();
+
 
 
