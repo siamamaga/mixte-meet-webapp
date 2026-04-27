@@ -22,7 +22,14 @@ const VideoCall = (() => {
   const ICE_SERVERS = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun.cloudflare.com:3478' }
+      {
+        urls: [
+          'turn:79.143.189.106:3478',
+          'turns:79.143.189.106:5349'
+        ],
+        username: 'mixtemeet',
+        credential: 'TurnPassword2026'
+      }
     ]
   };
 
@@ -514,6 +521,7 @@ try {
 
   return { startCall, startAudioCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, flipCamera, toggleSpeaker, _handleIncoming };
 })();
+
 
 
 
