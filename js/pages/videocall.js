@@ -151,7 +151,7 @@ const VideoCall = (() => {
       '</div>';
 
     var statusText = calling
-      ? (audioOnly ? '📞 Appel audio...' : '📹 Appel vidéo...')
+      ? (audioOnly ? '📞 Appel...' : '📹 Appel...')
       : (audioOnly ? '📞 Appel audio entrant' : '📹 Appel vidéo entrant');
 
     ui.innerHTML =
@@ -242,7 +242,7 @@ const VideoCall = (() => {
       var s = peerConnection ? peerConnection.connectionState : '';
       if (s === 'connected') {
         var st = document.getElementById('call-status');
-        if (st) st.textContent = 'Connecté ✓';
+        if (st) st.textContent = '📞 Appel en cours';
       }
       if (s === 'disconnected' || s === 'failed') {
         saveCallHistory('ended');
@@ -521,6 +521,7 @@ try {
 
   return { startCall, startAudioCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, flipCamera, toggleSpeaker, _handleIncoming };
 })();
+
 
 
 
