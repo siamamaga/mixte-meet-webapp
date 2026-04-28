@@ -1,15 +1,24 @@
-// js/pages/feed.js
+cat > /var/www/mixte-meet/frontend/js/pages/feed.js << 'ENDOFFILE'
+// js/pages/feed.js — v2.0 Stack + Carousel + Filtres fonctionnels
 const FeedPage = (() => {
   let profiles = [];
   let currentIdx = 0;
   let isDragging = false;
-  let startX = 0;
+  let startX = 0, startY = 0;
   let currentX = 0;
+  let currentFilters = {};
+  let photoIndexes = {};
 
   const FLAG = (code) => {
     if (!code || code.length !== 2) return '🌍';
     try { return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)); } catch { return '🌍'; }
   };
+
+  function parseDate(raw) {
+    if (!raw) return null;
+    const s = raw.includes('T') ? raw : raw.replace(' ', 'T') + 'Z';
+    return new Date(s).getTime();
+  }
 
   async function render() {
     const page = document.getElementById('page-feed');
@@ -25,211 +34,317 @@ const FeedPage = (() => {
           <button class="header-btn" onclick="FeedPage.showNotifs()">🔔</button>
         </div>
       </div>
+
       <div style="padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
         <button class="continent-btn active" onclick="FeedPage.filterContinent('',this)">🌍 Tous</button>
         <button class="continent-btn" onclick="FeedPage.filterOnline(this)">🟢 En ligne</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('AF',this)">🌍 Afrique</button>
-        <button class="continent-btn" onclick="FeedPage.filterContinent('EU',this)">EU Europe</button>
+        <button class="continent-btn" onclick="FeedPage.filterContinent('EU',this)">🌎 Europe</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('NA',this)">🌎 Amériques</button>
         <button class="continent-btn" onclick="FeedPage.filterContinent('AS',this)">🌏 Asie</button>
       </div>
-      <div style="flex:1;position:relative;padding:0 16px;display:flex;flex-direction:column;gap:0;">
-        <div id="feed-card-area" style="position:relative;flex:1;min-height:380px;margin-bottom:16px;">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
-            <div style="font-size:40px;">🦋</div>
-            <div style="font-size:14px;color:var(--muted);">Chargement...</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:0 0 20px;">
+
+      <div style="flex:1;position:relative;padding:0 16px;display:flex;flex-direction:column;">
+        <div id="feed-card-area" style="position:relative;flex:1;min-height:400px;margin-bottom:16px;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:0 0 20px;">
+          <button onclick="FeedPage.undoSwipe()"
+            style="width:46px;height:46px;border-radius:50%;background:#1A1320;border:2px solid rgba(255,200,50,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;"
+            title="Annuler">↩️</button>
           <button onclick="FeedPage.swipe('dislike')"
-            style="width:56px;height:56px;border-radius:50%;background:#1A1320;border:2px solid rgba(239,68,68,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);"
+            style="width:60px;height:60px;border-radius:50%;background:#1A1320;border:2px solid rgba(239,68,68,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);"
             title="Passer">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
           <button onclick="FeedPage.swipe('super_like')"
-            style="width:52px;height:52px;border-radius:50%;background:#1A1320;border:2px solid rgba(201,168,76,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);font-size:22px;color:var(--gold);"
+            style="width:50px;height:50px;border-radius:50%;background:#1A1320;border:2px solid rgba(201,168,76,0.5);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;"
             title="Super Like">⭐</button>
           <button onclick="FeedPage.swipe('like')"
-            style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#C41F65);border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(232,49,122,0.5);color:white;"
+            style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#C41F65);border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(232,49,122,0.5);color:white;"
             title="J'aime">♥</button>
           <button onclick="FeedPage.openChat()"
-            style="width:52px;height:52px;border-radius:50%;background:#1A1320;border:2px solid rgba(232,49,122,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(232,49,122,0.2);font-size:22px;"
-            title="Envoyer un message">💬</button>
+            style="width:46px;height:46px;border-radius:50%;background:#1A1320;border:2px solid rgba(232,49,122,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;"
+            title="Message">💬</button>
         </div>
       </div>
     `;
     await loadProfiles();
   }
 
-  async function loadProfiles(continent = '', onlineOnly = false) {
+  async function loadProfiles(filters = {}) {
+    currentFilters = filters;
     try {
       let url = '/feed';
-      if (continent) url += '?continent=' + continent;
+      const params = [];
+      if (filters.continent)    params.push('continent=' + filters.continent);
+      if (filters.age_min)      params.push('age_min=' + filters.age_min);
+      if (filters.age_max)      params.push('age_max=' + filters.age_max);
+      if (filters.country_code) params.push('country_code=' + filters.country_code);
+      if (params.length) url += '?' + params.join('&');
       const data = await API.get(url);
       let profs = data?.data || [];
-      if (onlineOnly) {
-        profs = profs.filter(function(p) {
+      if (filters.onlineOnly) {
+        profs = profs.filter(p => {
           if (!p.last_active_at) return false;
-          const d = Date.now() - new Date(p.last_active_at.replace(' ', 'T') + 'Z');
-          return d < 3600000;
+          return Date.now() - parseDate(p.last_active_at) < 3600000;
         });
+      }
+      if (filters.gender) {
+        profs = profs.filter(p => p.gender === filters.gender);
       }
       profiles = profs;
       currentIdx = 0;
+      photoIndexes = {};
       if (!profiles.length) { showEmpty(); return; }
-      showProfile(profiles[currentIdx]);
+      renderStack();
     } catch(e) { showError(); }
   }
 
-  function showProfile(profile) {
+  // ── PILE DE CARTES ───────────────────────────────────────
+  function renderStack() {
     const area = document.getElementById('feed-card-area');
-    if (!area || !profile) return;
-    const isDemo = profile.profile_type === 'demo';
-    const age    = profile.age || '?';
-    const flag   = FLAG(profile.country_code);
-    const city   = profile.city || profile.country_name || '';
-    const rawLa = profile.last_active_at;
-    const lastActive = rawLa ? parseDate(rawLa) : null;
-    const diff = lastActive ? Date.now() - lastActive : Infinity;
-    const online = isDemo || diff < 600000;
-    const absent = !isDemo && diff >= 600000 && diff < 3600000;
-    const statusBadge = online
-      ? '<div style="position:absolute;top:14px;right:14px;background:rgba(34,197,94,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">🟢 En ligne</div>'
-      : absent
-      ? '<div style="position:absolute;top:14px;right:14px;background:rgba(245,158,11,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">🟡 Absent</div>'
-      : '';
+    if (!area) return;
+    area.innerHTML = '';
 
-    const avatarContent = profile.main_photo
-      ? '<img src="' + profile.main_photo + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'<div style=\\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;\\\'>' + (profile.emoji||'👤') + '</div>\'">'
-      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;">' + (profile.emoji||'👤') + '</div>';
-
-    area.innerHTML =
-      '<div id="feed-card" style="position:absolute;inset:0;background:linear-gradient(135deg,#2D1F38,#1A0A14);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);cursor:grab;user-select:none;">' +
-        '<div style="position:absolute;inset:0;">' + avatarContent + '</div>' +
-        '<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.2) 50%,transparent 100%);"></div>' +
-        statusBadge +
-        (profile.is_verified ? '<div style="position:absolute;top:14px;left:14px;background:rgba(34,197,94,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">✅ Vérifié</div>' : '') +
-        '<div style="position:absolute;bottom:0;left:0;right:0;padding:20px 20px 16px;">' +
-          '<div style="font-family:\'Playfair Display\',serif;font-size:26px;font-weight:700;color:white;margin-bottom:4px;">' + profile.first_name + ', ' + age + '</div>' +
-          '<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:6px;">' + flag + ' ' + city + (profile.profession ? ' · ' + profile.profession : '') + '</div>' +
-          (profile.bio ? '<div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + profile.bio + '</div>' : '') +
-        '</div>' +
-        '<div id="swipe-nope" style="position:absolute;top:30px;left:20px;border:3px solid #EF4444;border-radius:10px;padding:6px 14px;color:#EF4444;font-weight:900;font-size:20px;transform:rotate(-15deg);opacity:0;transition:opacity 0.1s;">NOPE</div>' +
-        '<div id="swipe-like" style="position:absolute;top:30px;right:20px;border:3px solid #22C55E;border-radius:10px;padding:6px 14px;color:#22C55E;font-weight:900;font-size:20px;transform:rotate(15deg);opacity:0;transition:opacity 0.1s;">LIKE</div>' +
-      '</div>';
-    initSwipe();
+    // Afficher jusqu'à 3 cartes (de derrière vers devant)
+    const visible = Math.min(3, profiles.length - currentIdx);
+    for (let i = visible - 1; i >= 0; i--) {
+      const profile = profiles[currentIdx + i];
+      if (!profile) continue;
+      const card = buildCard(profile, i);
+      area.appendChild(card);
+    }
+    initSwipeGestures();
   }
 
-  function initSwipe() {
+  function buildCard(profile, stackPos) {
+    const card = document.createElement('div');
+    const scale = 1 - stackPos * 0.05;
+    const translateY = stackPos * 10;
+    card.id = stackPos === 0 ? 'feed-card' : 'feed-card-bg-' + stackPos;
+    card.style.cssText = `
+      position:absolute;inset:0;
+      background:linear-gradient(135deg,#2D1F38,#1A0A14);
+      border-radius:20px;overflow:hidden;
+      box-shadow:0 ${8 + stackPos*4}px ${30 + stackPos*10}px rgba(0,0,0,0.4);
+      transform: scale(${scale}) translateY(${translateY}px);
+      transform-origin: bottom center;
+      transition: transform 0.3s ease;
+      ${stackPos === 0 ? 'cursor:grab;user-select:none;z-index:10;' : 'z-index:' + (9 - stackPos) + ';'}
+    `;
+
+    const photoIdx = photoIndexes[profile.uuid] || 0;
+    const photos = profile.photos || (profile.main_photo ? [profile.main_photo] : []);
+    const imgSrc = photos[photoIdx] || profile.main_photo;
+
+    const age = profile.age || '?';
+    const flag = FLAG(profile.country_code);
+    const city = profile.city || profile.country_name || '';
+    const diff = profile.last_active_at ? Date.now() - parseDate(profile.last_active_at) : Infinity;
+    const online = diff < 600000;
+    const absent = diff >= 600000 && diff < 3600000;
+
+    card.innerHTML = `
+      <div style="position:absolute;inset:0;">
+        ${imgSrc
+          ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+          : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:80px;">👤</div>`
+        }
+      </div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.15) 50%,transparent 100%);"></div>
+
+      ${stackPos === 0 && photos.length > 1 ? `
+        <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:20;">
+          ${photos.map((_, i) => `<div style="width:${i===photoIdx?20:6}px;height:4px;border-radius:2px;background:${i===photoIdx?'white':'rgba(255,255,255,0.4)'};transition:width 0.2s;"></div>`).join('')}
+        </div>
+        <div style="position:absolute;top:0;left:0;width:40%;height:85%;z-index:15;" onclick="FeedPage.prevPhoto('${profile.uuid}')"></div>
+        <div style="position:absolute;top:0;right:0;width:40%;height:85%;z-index:15;" onclick="FeedPage.nextPhoto('${profile.uuid}')"></div>
+      ` : ''}
+
+      ${online
+        ? `<div style="position:absolute;top:14px;right:14px;background:rgba(34,197,94,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:11;">🟢 En ligne</div>`
+        : absent
+        ? `<div style="position:absolute;top:14px;right:14px;background:rgba(245,158,11,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:11;">🟡 Absent</div>`
+        : ''}
+
+      ${profile.is_verified
+        ? `<div style="position:absolute;top:14px;left:14px;background:rgba(34,197,94,0.9);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:11;">✅ Vérifié</div>`
+        : ''}
+
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 20px 16px;z-index:11;">
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:white;margin-bottom:4px;">${profile.first_name}, ${age}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-bottom:6px;">${flag} ${city}${profile.profession ? ' · ' + profile.profession : ''}</div>
+        ${profile.bio ? `<div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${profile.bio}</div>` : ''}
+      </div>
+
+      <div id="swipe-nope" style="position:absolute;top:30px;left:20px;border:3px solid #EF4444;border-radius:10px;padding:6px 14px;color:#EF4444;font-weight:900;font-size:20px;transform:rotate(-15deg);opacity:0;transition:opacity 0.1s;z-index:12;">NOPE</div>
+      <div id="swipe-like" style="position:absolute;top:30px;right:20px;border:3px solid #22C55E;border-radius:10px;padding:6px 14px;color:#22C55E;font-weight:900;font-size:20px;transform:rotate(15deg);opacity:0;transition:opacity 0.1s;z-index:12;">LIKE</div>
+      <div id="swipe-super" style="position:absolute;top:30px;left:50%;transform:translateX(-50%);border:3px solid #F59E0B;border-radius:10px;padding:6px 14px;color:#F59E0B;font-weight:900;font-size:18px;opacity:0;transition:opacity 0.1s;z-index:12;">⭐ SUPER</div>
+    `;
+    return card;
+  }
+
+  function initSwipeGestures() {
     const card = document.getElementById('feed-card');
     if (!card) return;
-    card.addEventListener('touchstart', function(e) { isDragging=true; startX=e.touches[0].clientX; currentX=0; }, {passive:true});
-    card.addEventListener('touchmove', function(e) {
+
+    card.addEventListener('touchstart', e => {
+      isDragging = true;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      currentX = 0;
+    }, {passive:true});
+
+    card.addEventListener('touchmove', e => {
       if (!isDragging) return;
       currentX = e.touches[0].clientX - startX;
-      card.style.transform = 'translateX(' + currentX + 'px) rotate(' + (currentX*0.08) + 'deg)';
-      var n=document.getElementById('swipe-nope'), l=document.getElementById('swipe-like');
-      if(n) n.style.opacity = currentX<-30 ? Math.min(1,Math.abs(currentX)/100) : 0;
-      if(l) l.style.opacity = currentX>30  ? Math.min(1,currentX/100) : 0;
+      applyDrag(card, currentX);
     }, {passive:true});
-    card.addEventListener('touchend', function() {
-      isDragging=false;
-      if(currentX>80) FeedPage.swipe('like');
-      else if(currentX<-80) FeedPage.swipe('dislike');
-      else { card.style.transition='transform 0.3s'; card.style.transform=''; setTimeout(function(){card.style.transition='';},300); }
-      currentX=0;
+
+    card.addEventListener('touchend', () => {
+      isDragging = false;
+      commitSwipe(card);
     });
-    card.addEventListener('mousedown', function(e) { isDragging=true; startX=e.clientX; currentX=0; card.style.cursor='grabbing'; e.preventDefault(); });
-    document.addEventListener('mousemove', function(e) {
-      if(!isDragging) return;
+
+    card.addEventListener('mousedown', e => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      currentX = 0;
+      card.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
       currentX = e.clientX - startX;
-      card.style.transform = 'translateX(' + currentX + 'px) rotate(' + (currentX*0.08) + 'deg)';
-      var n=document.getElementById('swipe-nope'), l=document.getElementById('swipe-like');
-      if(n) n.style.opacity = currentX<-30 ? Math.min(1,Math.abs(currentX)/100) : 0;
-      if(l) l.style.opacity = currentX>30  ? Math.min(1,currentX/100) : 0;
+      applyDrag(card, currentX);
     });
-    document.addEventListener('mouseup', function() {
-      if(!isDragging) return;
-      isDragging=false;
-      if(card) card.style.cursor='grab';
-      if(currentX>80) FeedPage.swipe('like');
-      else if(currentX<-80) FeedPage.swipe('dislike');
-      else { if(card){card.style.transition='transform 0.3s';card.style.transform='';setTimeout(function(){card.style.transition='';},300);} }
-      currentX=0;
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (card) card.style.cursor = 'grab';
+      commitSwipe(card);
     });
-    document.onkeydown = function(e) {
-      if(e.key==='ArrowLeft')  FeedPage.swipe('dislike');
-      if(e.key==='ArrowRight') FeedPage.swipe('like');
-      if(e.key==='ArrowUp')    FeedPage.swipe('super_like');
+
+    document.onkeydown = e => {
+      if (e.key === 'ArrowLeft')  FeedPage.swipe('dislike');
+      if (e.key === 'ArrowRight') FeedPage.swipe('like');
+      if (e.key === 'ArrowUp')    FeedPage.swipe('super_like');
+      if (e.key === 'ArrowDown')  FeedPage.undoSwipe();
     };
   }
 
-  function animateSwipe(dir) {
+  function applyDrag(card, dx) {
+    card.style.transform = `translateX(${dx}px) rotate(${dx * 0.06}deg)`;
+    const nope  = document.getElementById('swipe-nope');
+    const like  = document.getElementById('swipe-like');
+    if (nope) nope.style.opacity = dx < -30 ? Math.min(1, Math.abs(dx) / 100) : 0;
+    if (like) like.style.opacity = dx > 30  ? Math.min(1, dx / 100) : 0;
+    // Animer la carte derrière
+    const bg = document.getElementById('feed-card-bg-1');
+    if (bg) {
+      const progress = Math.min(1, Math.abs(dx) / 150);
+      const scale = 0.95 + progress * 0.05;
+      bg.style.transform = `scale(${scale}) translateY(${10 - progress * 10}px)`;
+    }
+  }
+
+  function commitSwipe(card) {
+    if (Math.abs(currentX) > 80) {
+      FeedPage.swipe(currentX > 0 ? 'like' : 'dislike');
+    } else {
+      if (card) {
+        card.style.transition = 'transform 0.35s cubic-bezier(.2,1,.3,1)';
+        card.style.transform = '';
+        setTimeout(() => { if (card) card.style.transition = ''; }, 350);
+      }
+      const nope = document.getElementById('swipe-nope');
+      const like = document.getElementById('swipe-like');
+      if (nope) nope.style.opacity = 0;
+      if (like) like.style.opacity = 0;
+    }
+    currentX = 0;
+  }
+
+  function animateOut(direction) {
     const card = document.getElementById('feed-card');
-    if(!card) return;
-    card.style.transition = 'transform 0.4s ease, opacity 0.4s';
-    card.style.transform  = 'translateX(' + (dir==='like'?500:-500) + 'px) rotate(' + (dir==='like'?30:-30) + 'deg)';
-    card.style.opacity    = '0';
+    if (!card) return Promise.resolve();
+    return new Promise(resolve => {
+      card.style.transition = 'transform 0.4s ease, opacity 0.4s';
+      const dx = direction === 'like' || direction === 'super_like' ? 600 : -600;
+      const rot = direction === 'like' || direction === 'super_like' ? 30 : -30;
+      card.style.transform = `translateX(${dx}px) rotate(${rot}deg)`;
+      card.style.opacity = '0';
+      setTimeout(resolve, 380);
+    });
   }
 
   function showEmpty() {
     const area = document.getElementById('feed-card-area');
-    if(!area) return;
-    area.innerHTML =
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:32px;">' +
-        '<div style="font-size:56px;">🦋</div>' +
-        '<div style="font-size:20px;font-weight:700;font-family:\'Playfair Display\',serif;">Vous avez tout vu !</div>' +
-        '<div style="font-size:14px;color:var(--muted);">Revenez plus tard pour de nouveaux profils</div>' +
-        '<button onclick="FeedPage.reload()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px 28px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'Outfit\',sans-serif;">🔄 Recommencer</button>' +
-      '</div>';
+    if (!area) return;
+    area.innerHTML = `
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:32px;">
+        <div style="font-size:56px;">🦋</div>
+        <div style="font-size:20px;font-weight:700;font-family:'Playfair Display',serif;">Vous avez tout vu !</div>
+        <div style="font-size:14px;color:var(--muted);">Revenez plus tard pour de nouveaux profils</div>
+        <button onclick="FeedPage.reload()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px 28px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;">🔄 Recommencer</button>
+      </div>`;
   }
 
   function showError() {
     const area = document.getElementById('feed-card-area');
-    if(!area) return;
-    area.innerHTML =
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">' +
-        '<div style="font-size:40px;">⚠️</div>' +
-        '<div style="font-size:14px;color:var(--muted);">Erreur de chargement</div>' +
-        '<button onclick="FeedPage.reload()" style="background:var(--pink);border:none;color:white;padding:10px 24px;border-radius:50px;font-size:13px;cursor:pointer;font-family:\'Outfit\',sans-serif;">Réessayer</button>' +
-      '</div>';
+    if (!area) return;
+    area.innerHTML = `
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+        <div style="font-size:40px;">⚠️</div>
+        <div style="font-size:14px;color:var(--muted);">Erreur de chargement</div>
+        <button onclick="FeedPage.reload()" style="background:var(--pink);border:none;color:white;padding:10px 24px;border-radius:50px;font-size:13px;cursor:pointer;">Réessayer</button>
+      </div>`;
   }
 
   function showMatchModal(profile) {
+    const photo = profile.main_photo
+      ? `<img src="${profile.main_photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--pink);">`
+      : `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:36px;">👤</div>`;
     Modal.show(
-      '<div style="text-align:center;padding:16px;">' +
-        '<div style="font-size:56px;margin-bottom:12px;">💞</div>' +
-        '<h2 style="font-family:\'Playfair Display\',serif;font-size:22px;margin-bottom:8px;">C\'est un Match !</h2>' +
-        '<p style="color:var(--muted);font-size:14px;margin-bottom:20px;"><strong style="color:white;">' + profile.first_name + '</strong> vous a aussi liké !</p>' +
-        '<div style="display:flex;gap:10px;justify-content:center;">' +
-          '<button onclick="Modal.close();ChatPage.open(FeedPage.getCurrentProfile())" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;font-family:\'Outfit\',sans-serif;">💬 Écrire un message</button>' +
-          '<button onclick="Modal.close()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;padding:12px 24px;border-radius:50px;cursor:pointer;font-family:\'Outfit\',sans-serif;">Continuer</button>' +
-        '</div>' +
-      '</div>', '');
+      `<div style="text-align:center;padding:16px;">
+        <div style="font-size:48px;margin-bottom:12px;">💞</div>
+        ${photo}
+        <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:12px 0 8px;">C'est un Match !</h2>
+        <p style="color:var(--muted);font-size:14px;margin-bottom:20px;"><strong style="color:white;">${profile.first_name}</strong> vous a aussi liké !</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button onclick="Modal.close();ChatPage.open(FeedPage.getCurrentProfile())" style="background:var(--pink);border:none;color:white;padding:12px 24px;border-radius:50px;font-weight:700;cursor:pointer;">💬 Écrire</button>
+          <button onclick="Modal.close()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;padding:12px 24px;border-radius:50px;cursor:pointer;">Continuer</button>
+        </div>
+      </div>`, '');
   }
 
   return {
     render,
     getCurrentProfile() { return profiles[currentIdx] || null; },
 
-    undo() {
-      const user = AuthService.getUser();
-      if (!user?.is_premium) {
-        Toast.info('Annuler un swipe est une fonctionnalité Premium ⭐');
-        App.navigate('pricing');
-        return;
-      }
-      if (currentIdx <= 0) { Toast.info('Aucun swipe à annuler'); return; }
-      currentIdx--;
-      showProfile(profiles[currentIdx]);
-      Toast.success('Swipe annulé ↩️');
+    nextPhoto(uuid) {
+      const profile = profiles.find(p => p.uuid === uuid);
+      if (!profile) return;
+      const photos = profile.photos || (profile.main_photo ? [profile.main_photo] : []);
+      const idx = photoIndexes[uuid] || 0;
+      photoIndexes[uuid] = Math.min(idx + 1, photos.length - 1);
+      renderStack();
     },
+
+    prevPhoto(uuid) {
+      const idx = photoIndexes[uuid] || 0;
+      photoIndexes[uuid] = Math.max(idx - 1, 0);
+      renderStack();
+    },
+
     async swipe(action) {
       const profile = profiles[currentIdx];
-      if(!profile) return;
-      // Vérifier limite super like
+      if (!profile) return;
       if (action === 'super_like') {
         const user = AuthService.getUser();
         if (!user?.is_premium) {
@@ -238,22 +353,33 @@ const FeedPage = (() => {
           return;
         }
       }
-      animateSwipe(action==='like'||action==='super_like' ? 'like' : 'dislike');
+      await animateOut(action);
       try {
-        if(profile.profile_type !== 'demo') {
-          const result = await API.post('/swipe', {uuid:profile.uuid, action});
-          if(result?.data?.matched) {
-            setTimeout(function() { showMatchModal(profile); }, 400);
-          }
-        } else if((action==='like'||action==='super_like') && Math.random()>0.4) {
-          setTimeout(function() { showMatchModal(profile); }, 400);
+        if (profile.profile_type !== 'demo') {
+          const result = await API.post('/swipe', { uuid: profile.uuid, action });
+          if (result?.data?.matched) showMatchModal(profile);
+        } else if ((action === 'like' || action === 'super_like') && Math.random() > 0.4) {
+          showMatchModal(profile);
         }
       } catch(e) { console.log('Swipe error:', e); }
-      setTimeout(function() {
-        currentIdx++;
-        if(currentIdx >= profiles.length) showEmpty();
-        else showProfile(profiles[currentIdx]);
-      }, 350);
+      currentIdx++;
+      if (currentIdx >= profiles.length) showEmpty();
+      else renderStack();
+    },
+
+    undoSwipe() {
+      const user = AuthService.getUser();
+      if (!user?.is_premium) {
+        Toast.info('Annuler un swipe est une fonctionnalité Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      if (currentIdx <= 0) { Toast.info('Aucun swipe à annuler'); return; }
+      API.post('/undo', {}).then(() => {
+        currentIdx--;
+        renderStack();
+        Toast.success('Swipe annulé ↩️');
+      }).catch(() => Toast.error('Erreur annulation'));
     },
 
     openChat() {
@@ -263,59 +389,90 @@ const FeedPage = (() => {
     },
 
     filterContinent(continent, btn) {
-      document.querySelectorAll('.continent-btn').forEach(function(b) { b.classList.remove('active'); });
-      if(btn) btn.classList.add('active');
-      currentIdx=0; profiles=[];
-      const area = document.getElementById('feed-card-area');
-      if(area) area.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
-      loadProfiles(continent);
+      document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadProfiles({ ...currentFilters, continent });
     },
 
     filterOnline(btn) {
-      document.querySelectorAll('.continent-btn').forEach(function(b) { b.classList.remove('active'); });
-      if(btn) btn.classList.add('active');
-      currentIdx=0; profiles=[];
-      const area = document.getElementById('feed-card-area');
-      if(area) area.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
-      API.get('/search').then(function(data) {
-        var profs = (data && data.data) ? data.data : [];
-        profiles = profs.filter(function(p) {
-          if (!p.last_active_at) return false;
-          var d = Date.now() - parseDate(p.last_active_at);
-          return d < 600000;
-        });
-        currentIdx = 0;
-        if (!profiles.length) showEmpty();
-        else showProfile(profiles[0]);
-      }).catch(function(){ showError(); });
+      document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadProfiles({ ...currentFilters, onlineOnly: true });
     },
 
     showFilters() {
-      Modal.show(
-        '<div style="display:flex;flex-direction:column;gap:16px;">' +
-          '<div class="input-group"><label class="input-label">Âge minimum</label><input type="range" min="18" max="65" value="18" style="width:100%;" oninput="this.nextElementSibling.textContent=this.value+\' ans\'"><span style="color:var(--muted);font-size:13px;">18 ans</span></div>' +
-          '<div class="input-group"><label class="input-label">Âge maximum</label><input type="range" min="18" max="65" value="50" style="width:100%;" oninput="this.nextElementSibling.textContent=this.value+\' ans\'"><span style="color:var(--muted);font-size:13px;">50 ans</span></div>' +
-          '<button onclick="Modal.close();Toast.success(\'Filtres appliqués\')" style="background:var(--pink);border:none;color:white;padding:12px;border-radius:50px;font-weight:700;cursor:pointer;font-family:\'Outfit\',sans-serif;width:100%;">Appliquer</button>' +
-        '</div>', '⚙️ Filtres');
+      const f = currentFilters;
+      Modal.show(`
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div>
+            <label class="input-label">Genre recherché</label>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <button id="fg-all"  onclick="FeedPage._setGenderBtn('')"      style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${!f.gender?'var(--pink)':'transparent'};color:white;cursor:pointer;">Tous</button>
+              <button id="fg-woman" onclick="FeedPage._setGenderBtn('woman')" style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='woman'?'var(--pink)':'transparent'};color:white;cursor:pointer;">Femmes</button>
+              <button id="fg-man"   onclick="FeedPage._setGenderBtn('man')"   style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='man'?'var(--pink)':'transparent'};color:white;cursor:pointer;">Hommes</button>
+            </div>
+          </div>
+          <div>
+            <label class="input-label">Âge minimum : <span id="lbl-amin">${f.age_min||18} ans</span></label>
+            <input type="range" min="18" max="65" value="${f.age_min||18}" style="width:100%;margin-top:8px;"
+              oninput="document.getElementById('lbl-amin').textContent=this.value+' ans';FeedPage._tmpFilters.age_min=+this.value">
+          </div>
+          <div>
+            <label class="input-label">Âge maximum : <span id="lbl-amax">${f.age_max||60} ans</span></label>
+            <input type="range" min="18" max="70" value="${f.age_max||60}" style="width:100%;margin-top:8px;"
+              oninput="document.getElementById('lbl-amax').textContent=this.value+' ans';FeedPage._tmpFilters.age_max=+this.value">
+          </div>
+          <div>
+            <label class="input-label">Continent</label>
+            <select id="filter-continent" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#1A1320;color:white;border:1px solid rgba(255,255,255,0.15);">
+              <option value="">Tous</option>
+              <option value="AF" ${f.continent==='AF'?'selected':''}>Afrique</option>
+              <option value="EU" ${f.continent==='EU'?'selected':''}>Europe</option>
+              <option value="NA" ${f.continent==='NA'?'selected':''}>Amériques</option>
+              <option value="AS" ${f.continent==='AS'?'selected':''}>Asie</option>
+              <option value="OC" ${f.continent==='OC'?'selected':''}>Océanie</option>
+            </select>
+          </div>
+          <button onclick="FeedPage._applyFilters()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:13px;border-radius:50px;font-weight:700;cursor:pointer;font-size:15px;">Appliquer les filtres</button>
+          <button onclick="FeedPage._resetFilters()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:10px;border-radius:50px;cursor:pointer;font-size:13px;">Réinitialiser</button>
+        </div>`, '⚙️ Filtres');
+      this._tmpFilters = { ...f };
     },
 
-    showNotifs() { Toast.info('Aucune nouvelle notification'); },
+    _tmpFilters: {},
+    _pendingGender: '',
+
+    _setGenderBtn(g) {
+      this._tmpFilters.gender = g;
+      ['all','woman','man'].forEach(k => {
+        const el = document.getElementById('fg-' + k);
+        if (el) el.style.background = (k === (g||'all')) ? 'var(--pink)' : 'transparent';
+      });
+    },
+
+    _applyFilters() {
+      const continent = document.getElementById('filter-continent')?.value || '';
+      const newFilters = { ...this._tmpFilters, continent };
+      Modal.close();
+      loadProfiles(newFilters);
+      Toast.success('Filtres appliqués ✓');
+    },
+
+    _resetFilters() {
+      this._tmpFilters = {};
+      Modal.close();
+      loadProfiles({});
+      Toast.info('Filtres réinitialisés');
+    },
+
+    showNotifs() { App.navigate('matches'); },
 
     async reload() {
       currentIdx = 0;
       profiles = [];
-      loadProfiles();
+      photoIndexes = {};
+      loadProfiles(currentFilters);
     },
   };
 })();
-
-
-
-
-
-
-
-
-
-
-
+ENDOFFILE
