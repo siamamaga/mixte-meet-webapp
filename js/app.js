@@ -67,7 +67,7 @@ const App = (() => {
         PushService.init();
       } else if (Notification.permission === 'default') {
         var btn = document.createElement('div');
-        btn.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#E8317A,#C2185B);color:white;padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;z-index:9999;box-shadow:0 4px 20px rgba(232,49,122,0.5);';
+        btn.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#E8317A,#C2185B);color:white;padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;z-index:9999;box-shadow:0 4px 20px rgba(232,49,122,0.5);';
         btn.innerHTML = '🔔 Activer les notifications';
         btn.onclick = function() { PushService.init(); btn.remove(); };
         document.body.appendChild(btn);
@@ -134,6 +134,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
