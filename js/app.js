@@ -87,9 +87,9 @@ const App = (() => {
   }, 5000);
 
   // Wake-up et keep-alive
-  fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
+  fetch('https://api.mixte-meet.fr/api/ping').catch(() => {});
   setInterval(function() {
-    fetch('https://mixte-meet-backend.onrender.com/api/ping').catch(() => {});
+    fetch('https://api.mixte-meet.fr/api/ping').catch(() => {});
   }, 60000);
 
   document.addEventListener('DOMContentLoaded', init);
@@ -122,6 +122,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
