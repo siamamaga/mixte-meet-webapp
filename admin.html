@@ -233,7 +233,7 @@ select.input-field option{background:#1A1320;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Analytics
     </div>
-    <div class="nav-item" onclick="window.open('https://mixte-meet-webapp.onrender.com','_blank')">
+    <div class="nav-item" onclick="window.open('https://mixte-meet.fr','_blank')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       Voir le site
     </div>
@@ -551,7 +551,7 @@ select.input-field option{background:#1A1320;}
       <div id="page-landing_editor" class="page">
         <div class="section-header">
           <div><h2>Éditeur Landing Page</h2><p>Personnalisez votre page d'accueil</p></div>
-          <a href="https://mixte-meet-webapp.onrender.com" target="_blank" class="site-preview-btn">👁️ Voir le site</a>
+          <a href="https://mixte-meet.fr" target="_blank" class="site-preview-btn">👁️ Voir le site</a>
         </div>
         <div class="grid-2">
           <div class="card">
@@ -622,8 +622,8 @@ select.input-field option{background:#1A1320;}
           <div class="card">
             <div class="card-title">🔧 Configuration générale</div>
             <div class="input-group" style="margin-bottom:12px;"><label class="input-label">Nom de la plateforme</label><input type="text" class="input-field" value="Mixte-Meet"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label class="input-label">URL Frontend</label><input type="text" class="input-field" value="https://mixte-meet-webapp.onrender.com"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label class="input-label">URL Backend</label><input type="text" class="input-field" value="https://mixte-meet-backend.onrender.com"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label class="input-label">URL Frontend</label><input type="text" class="input-field" value="https://mixte-meet.fr"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label class="input-label">URL Backend</label><input type="text" class="input-field" value="https://api.mixte-meet.fr"></div>
             <div class="input-group" style="margin-bottom:16px;"><label class="input-label">Âge minimum</label><input type="number" class="input-field" value="18"></div>
             <button class="btn btn-primary" onclick="showToast('Paramètres sauvegardés ✅','⚙️')">Sauvegarder</button>
           </div>
@@ -681,7 +681,7 @@ select.input-field option{background:#1A1320;}
 <div id="toast-root"></div>
 
 <script>
-const API = 'https://mixte-meet-backend.onrender.com/api';
+const API = 'https://api.mixte-meet.fr/api';
 let TOKEN = localStorage.getItem('mm_admin_token');
 let currentPage = 'dashboard';
 let membersPage = 0;
