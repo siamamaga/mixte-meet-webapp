@@ -1,7 +1,7 @@
 // js/services/socket.js — Temps réel via polling intelligent
 // (Socket.io nécessite une lib externe — on utilise du long-polling robuste)
 const SocketService = (() => {
-  const BACKEND = 'https://mixte-meet-backend.onrender.com/api';
+  const BACKEND = 'https://api.mixte-meet.fr/api';
   const handlers = {};
   let pollInterval    = null;
   let connected       = false;
