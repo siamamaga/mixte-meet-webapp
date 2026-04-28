@@ -61,6 +61,7 @@ const App = (() => {
     document.getElementById('view-app').classList.remove('hidden');
     navigate('feed');
     SocketService.connect();
+    setTimeout(function() { if (typeof PushService !== 'undefined') PushService.init(); }, 2000);
     // Sync user toutes les 30s
     async function syncUser() {
       try {
@@ -121,6 +122,7 @@ const App = (() => {
 
   return { navigate, showAuth, showApp };
 })();
+
 
 
 
