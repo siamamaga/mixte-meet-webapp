@@ -1,4 +1,4 @@
-cat > /var/www/mixte-meet/frontend/js/pages/feed.js << 'ENDOFFILE'
+
 // js/pages/feed.js — v2.0 Stack + Carousel + Filtres fonctionnels
 const FeedPage = (() => {
   let profiles = [];
@@ -481,4 +481,3 @@ filterOnline(btn) {
 },
   };
 })();
-ENDOFFILE
