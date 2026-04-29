@@ -389,17 +389,21 @@ const FeedPage = (() => {
     },
 
     filterContinent(continent, btn) {
-      document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      loadProfiles({ ...currentFilters, continent });
-    },
-
-    filterOnline(btn) {
-      document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      loadProfiles({ ...currentFilters, onlineOnly: true });
-    },
-
+  document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  profiles = []; currentIdx = 0;
+  const area = document.getElementById('feed-card-area');
+  if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
+  loadProfiles({ ...currentFilters, continent });
+},
+filterOnline(btn) {
+  document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  profiles = []; currentIdx = 0;
+  const area = document.getElementById('feed-card-area');
+  if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
+  loadProfiles({ ...currentFilters, onlineOnly: true });
+},
     showFilters() {
       const f = currentFilters;
       Modal.show(`
@@ -468,11 +472,13 @@ const FeedPage = (() => {
     showNotifs() { App.navigate('matches'); },
 
     async reload() {
-      currentIdx = 0;
-      profiles = [];
-      photoIndexes = {};
-      loadProfiles(currentFilters);
-    },
+  currentIdx = 0;
+  profiles = [];
+  photoIndexes = {};
+  const area = document.getElementById('feed-card-area');
+  if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">🔄 Rechargement...</div>';
+  loadProfiles(currentFilters);
+},
   };
 })();
 ENDOFFILE
