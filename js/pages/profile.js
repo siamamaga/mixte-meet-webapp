@@ -548,6 +548,45 @@ const payload  = { looking_for: lookingFor, age_min, age_max, relation_type: rel
       }
     },
 
+    showVisibility() {
+      const user = AuthService.getUser();
+      const current = user?.incognito_mode ? 'matches' : 'all';
+      Modal.show(`
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <p style="color:var(--muted);font-size:13px;text-align:center;">Choisissez qui peut voir votre profil dans le feed</p>
+          <label style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:${current==='all'?'rgba(232,49,122,0.15)':'transparent'}">
+            <input type="radio" name="vis" value="all" ${current==='all'?'checked':''} style="accent-color:var(--pink);">
+            <div><div style="font-weight:600;">🌍 Tout le monde</div><div style="font-size:12px;color:var(--muted);">Visible par tous les utilisateurs</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:${current==='matches'?'rgba(232,49,122,0.15)':'transparent'}">
+            <input type="radio" name="vis" value="matches" ${current==='matches'?'checked':''} style="accent-color:var(--pink);">
+            <div><div style="font-weight:600;">👁 Mes matchs uniquement <span style="background:var(--gold);color:black;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;">PRO</span></div><div style="font-size:12px;color:var(--muted);">Mode incognito activé</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:${current==='premium'?'rgba(232,49,122,0.15)':'transparent'}">
+            <input type="radio" name="vis" value="premium" ${current==='premium'?'checked':''} style="accent-color:var(--pink);">
+            <div><div style="font-weight:600;">⭐ Membres Premium uniquement <span style="background:var(--gold);color:black;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;">PRO</span></div><div style="font-size:12px;color:var(--muted);">Visible uniquement par les abonnés Premium</div></div>
+          </label>
+          <button onclick="ProfilePage.saveVisibility()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:13px;border-radius:50px;font-weight:700;cursor:pointer;margin-top:4px;">Enregistrer</button>
+        </div>`, '🌍 Visibilité du profil');
+    },
+    async saveVisibility() {
+      const val = document.querySelector('input[name="vis"]:checked')?.value;
+      if (!val) return;
+      const user = AuthService.getUser();
+      if ((val === 'matches' || val === 'premium') && !user?.is_premium) {
+        Modal.close();
+        Toast.info('Mode incognito réservé aux membres Premium ⭐');
+        App.navigate('pricing');
+        return;
+      }
+      try {
+        await API.put('/me', { incognito_mode: val === 'matches', show_online_status: val !== 'premium' });
+        Modal.close();
+        Toast.success('Visibilité mise à jour ✓');
+        const lbl = document.getElementById('visibility-label');
+        if (lbl) lbl.textContent = val === 'matches' ? 'Mes matchs uniquement' : 'Tout le monde';
+      } catch(e) { Toast.error('Erreur'); }
+    },
     confirmLogout() {
       Modal.show(`
         <div style="text-align:center;padding:8px;">
@@ -603,7 +642,7 @@ const SettingsPage = {
           <div class="settings-text"><span>Afficher ma ville</span><small>Dans les résultats de recherche</small></div>
           <span class="settings-arrow">›</span>
         </div>
-        <div class="settings-row" onclick="Toast.info('Qui peut vous voir — bientôt')">
+        <div class="settings-row" onclick="ProfilePage.showVisibility()">
           <span class="settings-icon">🌍</span>
           <div class="settings-text"><span>Visibilité du profil</span><small>Tout le monde</small></div>
           <span class="settings-arrow">›</span>

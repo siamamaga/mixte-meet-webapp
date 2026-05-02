@@ -26,7 +26,7 @@ const StoriesPage = (() => {
       const addBtn = document.createElement('div');
       addBtn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;flex-shrink:0;';
       addBtn.onclick = () => StoriesPage.openUpload();
-      addBtn.innerHTML = '<div style="width:58px;height:58px;border-radius:50%;background:rgba(232,49,122,0.2);border:2px dashed #E8317A;display:flex;align-items:center;justify-content:center;font-size:24px;">+</div><span style="font-size:10px;color:#E8317A;">Ma story</span>';
+      addBtn.innerHTML = '<div style="width:46px;height:46px;border-radius:50%;background:rgba(232,49,122,0.2);border:2px dashed #E8317A;display:flex;align-items:center;justify-content:center;font-size:20px;">+</div><span style="font-size:9px;color:#E8317A;">Ma story</span>';
       container.appendChild(addBtn);
     }
     allGroups.forEach((group, idx) => {
@@ -40,7 +40,7 @@ const StoriesPage = (() => {
       const avatar = group.avatar
         ? '<img src="' + group.avatar + '" style="width:100%;height:100%;object-fit:cover;">'
         : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;">👤</div>';
-      div.innerHTML = '<div style="' + ring + 'border-radius:50%;width:58px;height:58px;"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:#2D1F38;border:2px solid #140F17;">' + avatar + '</div></div><span style="font-size:10px;color:rgba(255,255,255,0.8);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (group.is_mine ? 'Ma story' : group.first_name) + '</span>';
+      div.innerHTML = '<div style="' + ring + 'border-radius:50%;width:46px;height:46px;"><div style="width:42px;height:42px;border-radius:50%;overflow:hidden;background:#2D1F38;border:2px solid #140F17;">' + avatar + '</div></div><span style="font-size:9px;color:rgba(255,255,255,0.8);max-width:50px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (group.is_mine ? 'Ma story' : group.first_name) + '</span>';
       container.appendChild(div);
     });
   }

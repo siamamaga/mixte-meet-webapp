@@ -132,7 +132,23 @@ const App = (() => {
     }
   });
 
-  return { navigate, showAuth, showApp };
+
+  function openMenu() {
+    const drawer = document.getElementById('app-drawer');
+    const overlay = document.getElementById('app-drawer-overlay');
+    if (drawer) drawer.style.display = 'block';
+    if (overlay) overlay.style.display = 'block';
+  }
+
+  function closeMenu() {
+    const drawer = document.getElementById('app-drawer');
+    const overlay = document.getElementById('app-drawer-overlay');
+    if (drawer) drawer.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function logout() { AuthService.logout(); }
+  return { navigate, showAuth, showApp, openMenu, closeMenu, logout };
 })();
 
 

@@ -35,6 +35,7 @@ const FeedPage = (() => {
         </div>
       </div>
 
+      <div id="stories-bar" style="padding:8px 12px;display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:4px;min-height:65px;"></div>
       <div style="padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
         <button class="continent-btn active" onclick="FeedPage.filterContinent('',this)">🌍 Tous</button>
         <button class="continent-btn" onclick="FeedPage.filterOnline(this)">🟢 En ligne</button>
@@ -45,7 +46,7 @@ const FeedPage = (() => {
       </div>
 
       <div style="flex:1;position:relative;padding:0 16px;display:flex;flex-direction:column;">
-        <div id="feed-card-area" style="position:relative;flex:1;min-height:400px;margin-bottom:16px;"></div>
+        <div id="feed-card-area" style="position:relative;flex:1;min-height:340px;margin-bottom:16px;"></div>
 
         <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:0 0 20px;">
           <button onclick="FeedPage.undoSwipe()"
@@ -70,6 +71,7 @@ const FeedPage = (() => {
         </div>
       </div>
     `;
+    if (typeof StoriesPage !== "undefined") StoriesPage.init();
     await loadProfiles();
   }
 
