@@ -143,7 +143,7 @@
 
   <script>
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/firebase-messaging-sw.js")
+    navigator.serviceWorker.register("/firebase-messaging-sw.js?v=202605011600")
       .then(reg => console.log("SW enregistre:", reg.scope))
       .catch(err => console.log("SW erreur:", err));
   }
