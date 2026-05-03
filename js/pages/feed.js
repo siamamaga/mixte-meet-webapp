@@ -285,16 +285,12 @@ const FeedPage = (() => {
     });
   }
 
-  function showEmpty() {
-    const area = document.getElementById('feed-card-area');
-    if (!area) return;
-    area.innerHTML = `
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:32px;">
-        <div style="font-size:56px;">🦋</div>
-        <div style="font-size:20px;font-weight:700;font-family:'Playfair Display',serif;">Vous avez tout vu !</div>
-        <div style="font-size:14px;color:var(--muted);">Revenez plus tard pour de nouveaux profils</div>
-        <button onclick="FeedPage.reload()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px 28px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;">🔄 Recommencer</button>
-      </div>`;
+  async function showEmpty() {
+    try { await API.delete('/swipes/reset'); } catch(e) {}
+    currentIdx = 0;
+    profiles = [];
+    photoIndexes = {};
+    await loadProfiles(currentFilters);
   }
 
   function showError() {
