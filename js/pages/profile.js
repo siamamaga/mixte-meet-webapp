@@ -449,15 +449,23 @@ const payload  = { looking_for: lookingFor, age_min, age_max, relation_type: rel
 
       try {
         const status = await API.get('/me/verify');
-        if (status?.data?.verification_status === 'pending') {
+        if (status?.data?.verification_status === 'approved') {
+          Modal.show(
+            '<div style="text-align:center;padding:16px;">' +
+              '<div style="font-size:56px;margin-bottom:12px;">✅</div>' +
+              '<h3 style="font-family:\'Playfair Display\',serif;font-size:20px;margin-bottom:8px;">Profil vérifié !</h3>' +
+              '<p style="color:var(--muted);font-size:14px;">Votre identité a été confirmée par notre équipe.</p>' +
+            '</div>', '✅ Vérification');
+          return;
+        } else if (status?.data?.verification_status === 'pending') {
           Modal.show(
             '<div style="text-align:center;padding:16px;">' +
               '<div style="font-size:56px;margin-bottom:12px;">⏳</div>' +
-              '<h3 style="font-family:Playfair Display,serif;font-size:20px;margin-bottom:8px;">Verification en cours</h3>' +
-              '<p style="color:var(--muted);font-size:14px;margin-bottom:8px;">Votre selfie est en cours d\'examen par notre equipe.</p>' +
-              '<p style="color:var(--muted);font-size:12px;margin-bottom:20px;">Delai habituel : 24-48h</p>' +
-              '<button onclick="Modal.close()" style="background:var(--pink);border:none;color:white;padding:12px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">OK</button>' +
-            '</div>', '');
+              '<h3 style="font-family:\'Playfair Display\',serif;font-size:20px;margin-bottom:8px;">Vérification en cours</h3>' +
+              '<p style="color:var(--muted);font-size:14px;margin-bottom:8px;">Votre selfie est en cours d\'examen par notre équipe.</p>' +
+              '<p style="color:var(--muted);font-size:13px;">Délai habituel : 24-48h</p>' +
+              '<button onclick="Modal.close()" style="margin-top:16px;background:var(--pink);border:none;color:white;padding:12px 28px;border-radius:50px;cursor:pointer;font-weight:700;">OK</button>' +
+            '</div>', '⏳ En cours');
           return;
         }
       } catch(e) {}
