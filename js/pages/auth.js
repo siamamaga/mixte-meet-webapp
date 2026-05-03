@@ -287,7 +287,22 @@ const AuthPage = (() => {
                     <div><strong>Fun / Casual</strong><br><small>Rencontres sans prise de tête</small></div>
                   </div>
                   <div class="option-card" onclick="AuthPage.selectRelationType('any',this)">
+                    <div class="option-card" onclick="AuthPage.selectRelationType('any',this)">
                     <div style="font-size:24px;">🌟</div>
+                    <div><strong>Peu importe</strong><br><small>Je veux d'abord voir</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 24px 24px;">
+            <button class="btn btn-primary btn-full" onclick="AuthPage.submitRegister()" id="btn-finish">
+              🦋 Créer mon profil
+            </button>
+          </div>
+        </div>
+      `,
+    };
     return steps[step] || steps[1];
   }
 };
