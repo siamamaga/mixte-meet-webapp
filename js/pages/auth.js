@@ -19,7 +19,7 @@ const AuthPage = (() => {
 
   let onboardingData = {};
   let currentStep = 1;
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6;
 
   function render() {
     const view = document.getElementById('view-auth');
@@ -214,7 +214,7 @@ const AuthPage = (() => {
             </div>
           </div>
           <div style="padding:0 24px 24px;">
-            <button class="btn btn-primary btn-full" onclick="AuthPage.nextStep(4)">Continuer →</button>
+            <button class="btn btn-primary btn-full" onclick="AuthPage.nextStep(5)">Continuer →</button>
           </div>
         </div>
       `,
@@ -254,6 +254,40 @@ const AuthPage = (() => {
         </div>
       `,
     };
+    6: `
+        <div class="onboarding-step">
+          <div style="padding:20px 24px 0;display:flex;align-items:center;gap:12px;">
+            <button onclick="AuthPage.prevStep()" class="header-btn">←</button>
+            <div class="progress-bar" style="flex:1;"><div class="progress-bar-fill" style="width:100%"></div></div>
+            <span style="font-size:12px;color:var(--muted);">${step}/${TOTAL_STEPS}</span>
+          </div>
+          <div class="onboarding-content">
+            <div class="onboarding-title">Vos préférences 💫</div>
+            <p class="onboarding-desc">Aidez-nous à trouver les meilleures correspondances.</p>
+            <div style="display:flex;flex-direction:column;gap:20px;">
+              <div>
+                <label class="input-label">💪 Votre corpulence</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                  <div class="filter-chip" onclick="AuthPage.selectBodyType('slim',this)">🧍 Mince</div>
+                  <div class="filter-chip" onclick="AuthPage.selectBodyType('athletic',this)">🏃 Athlétique</div>
+                  <div class="filter-chip" onclick="AuthPage.selectBodyType('average',this)">🧑 Intermédiaire</div>
+                  <div class="filter-chip" onclick="AuthPage.selectBodyType('curvy',this)">🍑 Rondelette</div>
+                  <div class="filter-chip" onclick="AuthPage.selectBodyType('large',this)">🫂 Costaud(e)</div>
+                </div>
+              </div>
+              <div>
+                <label class="input-label">💍 Type de relation recherché</label>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                  <div class="option-card" onclick="AuthPage.selectRelationType('serious',this)">
+                    <div style="font-size:24px;">💍</div>
+                    <div><strong>Relation sérieuse</strong><br><small>Je cherche une relation durable</small></div>
+                  </div>
+                  <div class="option-card" onclick="AuthPage.selectRelationType('fun',this)">
+                    <div style="font-size:24px;">💋</div>
+                    <div><strong>Fun / Casual</strong><br><small>Rencontres sans prise de tête</small></div>
+                  </div>
+                  <div class="option-card" onclick="AuthPage.selectRelationType('any',this)">
+                    <div style="font-size:24px;">🌟</div>
     return steps[step] || steps[1];
   }
 
@@ -328,6 +362,16 @@ const AuthPage = (() => {
         input.type = 'password';
         btn.textContent = '👁️';
       }
+    },
+    selectBodyType(v, el) {
+      onboardingData.body_type = v;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    },
+    selectRelationType(v, el) {
+      onboardingData.relation_type = v;
+      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
     },
     toggleLang(v, el) {
       onboardingData.languages = onboardingData.languages || [];
