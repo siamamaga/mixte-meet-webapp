@@ -386,23 +386,23 @@ const FeedPage = (() => {
       ChatPage.open(profile);
     },
 
-    async filterContinent(continent, btn) {
+    filterContinent(continent, btn) {
   document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   profiles = []; currentIdx = 0;
+  photoIndexes = {};
   const area = document.getElementById('feed-card-area');
   if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
-  try { await API.delete('/swipes/reset'); } catch(e) {}
-  loadProfiles({ ...currentFilters, continent });
+  loadProfiles({ continent });
 },
-async filterOnline(btn) {
+filterOnline(btn) {
   document.querySelectorAll('.continent-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   profiles = []; currentIdx = 0;
+  photoIndexes = {};
   const area = document.getElementById('feed-card-area');
   if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">Chargement...</div>';
-  try { await API.delete('/swipes/reset'); } catch(e) {}
-  loadProfiles({ ...currentFilters, onlineOnly: true });
+  loadProfiles({ onlineOnly: true });
 },
     showFilters() {
       const f = currentFilters;
