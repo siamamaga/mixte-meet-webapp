@@ -74,7 +74,10 @@ const AuthPage = (() => {
             <label class="input-label">Mot de passe</label>
             <div class="input-icon-wrap">
               <span class="input-icon">🔒</span>
-              <input name="password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required>
+              <div style="position:relative;">
+  <input name="password" id="login-password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required style="padding-right:48px;">
+  <button type="button" onclick="AuthPage.togglePassword('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.5);padding:4px;">👁️</button>
+</div>
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
