@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+navigator.serviceWorker.getRegistrations().then(function(registrations) {
+  for(let registration of registrations) { registration.unregister(); }
+  alert('Service Worker supprimé ! Fermez cette page et ouvrez mixte-meet.fr');
+});
+</script>
+<p>Suppression du service worker en cours...</p>
+</body>
+</html>
