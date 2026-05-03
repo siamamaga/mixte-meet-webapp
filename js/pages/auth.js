@@ -15,6 +15,8 @@ const AuthPage = (() => {
     {code:'IT',name:'Italie',flag:'🇮🇹'},{code:'PT',name:'Portugal',flag:'🇵🇹'},
     {code:'US',name:'États-Unis',flag:'🇺🇸'},{code:'CA',name:'Canada',flag:'🇨🇦'},
     {code:'BR',name:'Brésil',flag:'🇧🇷'},{code:'AE',name:'Émirats',flag:'🇦🇪'},
+    {code:'RW',name:'Rwanda',flag:'🇷🇼'},{code:'CD',name:'Congo RDC',flag:'🇨🇩'},
+    {code:'MG',name:'Madagascar',flag:'🇲🇬'},{code:'MU',name:'Maurice',flag:'🇲🇺'},
   ];
 
   let onboardingData = {};
@@ -25,7 +27,6 @@ const AuthPage = (() => {
     const view = document.getElementById('view-auth');
     view.innerHTML = `
       <div style="min-height:100vh;background:var(--dark);display:flex;flex-direction:column;">
-        <!-- Header Auth -->
         <div style="padding:56px 24px 0;text-align:center;">
           <div style="width:64px;height:64px;background:linear-gradient(135deg,var(--pink),#C41F65);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 28px rgba(232,49,122,0.4);">
             <svg width="40" height="40" viewBox="0 0 56 56" fill="none">
@@ -39,7 +40,6 @@ const AuthPage = (() => {
           <p style="font-size:14px;color:var(--muted);">L'amour n'a pas de frontières 🌍</p>
         </div>
 
-        <!-- Tabs -->
         <div style="display:flex;gap:0;padding:32px 24px 0;border-bottom:1px solid var(--border);margin-top:32px;">
           <button id="tab-login" onclick="AuthPage.showLogin()"
             style="flex:1;padding:12px;background:none;border:none;border-bottom:2px solid var(--pink);color:var(--white);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">
@@ -51,7 +51,6 @@ const AuthPage = (() => {
           </button>
         </div>
 
-        <!-- Form container -->
         <div id="auth-form-container" style="flex:1;padding:28px 24px;overflow-y:auto;">
           ${renderLoginForm()}
         </div>
@@ -72,9 +71,9 @@ const AuthPage = (() => {
           </div>
           <div class="input-group">
             <label class="input-label">Mot de passe</label>
-            <div class="input-icon-wrap">
-              <span class="input-icon">🔒</span>
-              <input name="password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required>
+            <div style="position:relative;">
+              <input name="password" id="login-password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required style="padding-right:48px;">
+              <button type="button" onclick="AuthPage.togglePassword('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.5);padding:4px;">👁️</button>
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
@@ -117,7 +116,7 @@ const AuthPage = (() => {
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
                   <select id="ob-birth-day" class="input-field" style="padding:12px 8px;font-size:13px;"><option value="">Jour</option><option value="01">1</option><option value="02">2</option><option value="03">3</option><option value="04">4</option><option value="05">5</option><option value="06">6</option><option value="07">7</option><option value="08">8</option><option value="09">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option></select>
                   <select id="ob-birth-month" class="input-field" style="padding:12px 8px;font-size:13px;"><option value="">Mois</option><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select>
-                  <select id="ob-birth-year" class="input-field" style="padding:12px 8px;font-size:13px;"><option value="">Année</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option><option value="1969">1969</option><option value="1968">1968</option><option value="1967">1967</option><option value="1966">1966</option><option value="1965">1965</option><option value="1964">1964</option><option value="1963">1963</option><option value="1962">1962</option><option value="1961">1961</option><option value="1960">1960</option></select>
+                  <select id="ob-birth-year" class="input-field" style="padding:12px 8px;font-size:13px;"><option value="">Année</option><option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option><option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option><option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option><option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option><option value="1990">1990</option><option value="1989">1989</option><option value="1988">1988</option><option value="1987">1987</option><option value="1986">1986</option><option value="1985">1985</option><option value="1984">1984</option><option value="1983">1983</option><option value="1982">1982</option><option value="1981">1981</option><option value="1980">1980</option><option value="1979">1979</option><option value="1978">1978</option><option value="1977">1977</option><option value="1976">1976</option><option value="1975">1975</option><option value="1974">1974</option><option value="1973">1973</option><option value="1972">1972</option><option value="1971">1971</option><option value="1970">1970</option><option value="1965">1965</option><option value="1960">1960</option></select>
                 </div>
               </div>
               <div class="input-group">
@@ -214,7 +213,7 @@ const AuthPage = (() => {
             </div>
           </div>
           <div style="padding:0 24px 24px;">
-            <button class="btn btn-primary btn-full" onclick="AuthPage.nextStep(5)">Continuer →</button>
+            <button class="btn btn-primary btn-full" onclick="AuthPage.nextStep(4)">Continuer →</button>
           </div>
         </div>
       `,
@@ -222,7 +221,7 @@ const AuthPage = (() => {
         <div class="onboarding-step">
           <div style="padding:20px 24px 0;display:flex;align-items:center;gap:12px;">
             <button onclick="AuthPage.prevStep()" class="header-btn">←</button>
-            <div class="progress-bar" style="flex:1;"><div class="progress-bar-fill" style="width:100%"></div></div>
+            <div class="progress-bar" style="flex:1;"><div class="progress-bar-fill" style="width:${(step/TOTAL_STEPS)*100}%"></div></div>
             <span style="font-size:12px;color:var(--muted);">${step}/${TOTAL_STEPS}</span>
           </div>
           <div class="onboarding-content">
@@ -240,21 +239,18 @@ const AuthPage = (() => {
               <div class="input-group">
                 <label class="input-label">Langues parlées</label>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-                  ${[{v:'fr',l:'🇫🇷 Français'},{v:'en',l:'🇬🇧 Anglais'},{v:'es',l:'🇪🇸 Espagnol'},{v:'pt',l:'🇧🇷 Portugais'},{v:'ar',l:'🇸🇦 Arabe'}]
+                  ${[{v:'fr',l:'🇫🇷 Français'},{v:'en',l:'🇬🇧 Anglais'},{v:'es',l:'🇪🇸 Espagnol'},{v:'pt',l:'🇧🇷 Portugais'},{v:'ar',l:'🇸🇦 Arabe'},{v:'wo',l:'🇸🇳 Wolof'},{v:'yo',l:'🇳🇬 Yoruba'}]
                     .map(lang => `<div class="filter-chip ${(onboardingData.languages||[]).includes(lang.v)?'active':''}" onclick="AuthPage.toggleLang('${lang.v}',this)">${lang.l}</div>`).join('')}
                 </div>
               </div>
             </div>
           </div>
           <div style="padding:0 24px 24px;">
-            <button class="btn btn-primary btn-full" onclick="AuthPage.submitRegister()" id="btn-finish">
-              🦋 Créer mon profil
-            </button>
+            <button class="btn btn-primary btn-full" onclick="AuthPage.nextStep(5)">Continuer →</button>
           </div>
         </div>
       `,
-    
-    6: `
+      6: `
         <div class="onboarding-step">
           <div style="padding:20px 24px 0;display:flex;align-items:center;gap:12px;">
             <button onclick="AuthPage.prevStep()" class="header-btn">←</button>
@@ -263,33 +259,32 @@ const AuthPage = (() => {
           </div>
           <div class="onboarding-content">
             <div class="onboarding-title">Vos préférences 💫</div>
-            <p class="onboarding-desc">Aidez-nous à trouver les meilleures correspondances.</p>
+            <p class="onboarding-desc">Ces infos nous aident à trouver vos meilleures correspondances.</p>
             <div style="display:flex;flex-direction:column;gap:20px;">
               <div>
                 <label class="input-label">💪 Votre corpulence</label>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-                  <div class="filter-chip" onclick="AuthPage.selectBodyType('slim',this)">🧍 Mince</div>
-                  <div class="filter-chip" onclick="AuthPage.selectBodyType('athletic',this)">🏃 Athlétique</div>
-                  <div class="filter-chip" onclick="AuthPage.selectBodyType('average',this)">🧑 Intermédiaire</div>
-                  <div class="filter-chip" onclick="AuthPage.selectBodyType('curvy',this)">🍑 Rondelette</div>
-                  <div class="filter-chip" onclick="AuthPage.selectBodyType('large',this)">🫂 Costaud(e)</div>
+                  <div class="filter-chip ${onboardingData.body_type==='slim'?'active':''}" onclick="AuthPage.selectBodyType('slim',this)">🧍 Mince</div>
+                  <div class="filter-chip ${onboardingData.body_type==='athletic'?'active':''}" onclick="AuthPage.selectBodyType('athletic',this)">🏃 Athlétique</div>
+                  <div class="filter-chip ${onboardingData.body_type==='average'?'active':''}" onclick="AuthPage.selectBodyType('average',this)">🧑 Intermédiaire</div>
+                  <div class="filter-chip ${onboardingData.body_type==='curvy'?'active':''}" onclick="AuthPage.selectBodyType('curvy',this)">🍑 Rondelette</div>
+                  <div class="filter-chip ${onboardingData.body_type==='large'?'active':''}" onclick="AuthPage.selectBodyType('large',this)">🫂 Costaud(e)</div>
                 </div>
               </div>
               <div>
                 <label class="input-label">💍 Type de relation recherché</label>
                 <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-                  <div class="option-card" onclick="AuthPage.selectRelationType('serious',this)">
+                  <div class="option-card ${onboardingData.relation_type==='serious'?'selected':''}" onclick="AuthPage.selectRelationType('serious',this)" style="display:flex;align-items:center;gap:12px;padding:14px;">
                     <div style="font-size:24px;">💍</div>
-                    <div><strong>Relation sérieuse</strong><br><small>Je cherche une relation durable</small></div>
+                    <div><strong>Relation sérieuse</strong><br><small style="color:var(--muted);">Je cherche une relation durable</small></div>
                   </div>
-                  <div class="option-card" onclick="AuthPage.selectRelationType('fun',this)">
+                  <div class="option-card ${onboardingData.relation_type==='fun'?'selected':''}" onclick="AuthPage.selectRelationType('fun',this)" style="display:flex;align-items:center;gap:12px;padding:14px;">
                     <div style="font-size:24px;">💋</div>
-                    <div><strong>Fun / Casual</strong><br><small>Rencontres sans prise de tête</small></div>
+                    <div><strong>Fun / Casual</strong><br><small style="color:var(--muted);">Rencontres sans prise de tête</small></div>
                   </div>
-                  <div class="option-card" onclick="AuthPage.selectRelationType('any',this)">
-                    <div class="option-card" onclick="AuthPage.selectRelationType('any',this)">
+                  <div class="option-card ${onboardingData.relation_type==='any'?'selected':''}" onclick="AuthPage.selectRelationType('any',this)" style="display:flex;align-items:center;gap:12px;padding:14px;">
                     <div style="font-size:24px;">🌟</div>
-                    <div><strong>Peu importe</strong><br><small>Je veux d'abord voir</small></div>
+                    <div><strong>Peu importe</strong><br><small style="color:var(--muted);">Je veux d'abord voir</small></div>
                   </div>
                 </div>
               </div>
@@ -305,7 +300,7 @@ const AuthPage = (() => {
     };
     return steps[step] || steps[1];
   }
-};
+
   return {
     render,
 
@@ -332,11 +327,13 @@ const AuthPage = (() => {
     },
 
     prevStep() {
-      if (currentStep > 1) { currentStep--; document.getElementById('auth-form-container').innerHTML = renderOnboardingStep(currentStep); }
+      if (currentStep > 1) {
+        currentStep--;
+        document.getElementById('auth-form-container').innerHTML = renderOnboardingStep(currentStep);
+      }
     },
 
     nextStep(step) {
-      // Validation
       if (step === 1) {
         const fn = document.getElementById('ob-firstname')?.value.trim();
         const day   = document.getElementById('ob-birth-day')?.value;
@@ -361,12 +358,40 @@ const AuthPage = (() => {
         const countryObj = COUNTRIES.find(c => c.code === country);
         Object.assign(onboardingData, { country_code: country, country_name: countryObj?.name, city, open_to_interracial: interracial });
       }
+      if (step === 5) {
+        const bio        = document.getElementById('ob-bio')?.value.trim();
+        const profession = document.getElementById('ob-profession')?.value.trim();
+        Object.assign(onboardingData, { bio, profession });
+        if (!onboardingData.languages?.length) onboardingData.languages = ['fr'];
+      }
       currentStep++;
       document.getElementById('auth-form-container').innerHTML = renderOnboardingStep(currentStep);
     },
 
-    selectGender(v)      { onboardingData.gender = v; document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); event.currentTarget.classList.add('selected'); },
-    selectLookingFor(v)  { onboardingData.looking_for = v; document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); event.currentTarget.classList.add('selected'); },
+    selectGender(v) {
+      onboardingData.gender = v;
+      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    },
+
+    selectLookingFor(v) {
+      onboardingData.looking_for = v;
+      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    },
+
+    selectBodyType(v, el) {
+      onboardingData.body_type = v;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    },
+
+    selectRelationType(v, el) {
+      onboardingData.relation_type = v;
+      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    },
+
     togglePassword(inputId, btn) {
       const input = document.getElementById(inputId);
       if (!input) return;
@@ -378,20 +403,16 @@ const AuthPage = (() => {
         btn.textContent = '👁️';
       }
     },
-    selectBodyType(v, el) {
-      onboardingData.body_type = v;
-      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-    },
-    selectRelationType(v, el) {
-      onboardingData.relation_type = v;
-      document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-      el.classList.add('selected');
-    },
+
     toggleLang(v, el) {
       onboardingData.languages = onboardingData.languages || [];
-      if (onboardingData.languages.includes(v)) { onboardingData.languages = onboardingData.languages.filter(l => l !== v); el.classList.remove('active'); }
-      else { onboardingData.languages.push(v); el.classList.add('active'); }
+      if (onboardingData.languages.includes(v)) {
+        onboardingData.languages = onboardingData.languages.filter(l => l !== v);
+        el.classList.remove('active');
+      } else {
+        onboardingData.languages.push(v);
+        el.classList.add('active');
+      }
     },
 
     async submitLogin(event) {
@@ -409,13 +430,13 @@ const AuthPage = (() => {
     forgotPassword() {
       Modal.show(
         '<div style="display:flex;flex-direction:column;gap:16px;">' +
-          '<p style="font-size:14px;color:var(--muted);">Entrez votre email — vous recevrez un lien de reinitialisation.</p>' +
+          '<p style="font-size:14px;color:var(--muted);">Entrez votre email — vous recevrez un lien de réinitialisation.</p>' +
           '<div class="input-group">' +
             '<label class="input-label">Email</label>' +
             '<input id="forgot-email" type="email" class="input-field" placeholder="votre@email.com">' +
           '</div>' +
           '<button onclick="AuthPage._doForgotPassword()" style="background:var(--pink);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">Envoyer le lien</button>' +
-        '</div>', 'Mot de passe oublie');
+        '</div>', 'Mot de passe oublié');
     },
 
     async _doForgotPassword() {
@@ -424,14 +445,13 @@ const AuthPage = (() => {
       try {
         await API.post('/auth/forgot-password', { email });
         Modal.close();
-        Toast.success('Email envoye ! Verifiez votre boite mail.');
+        Toast.success('Email envoyé ! Vérifiez votre boîte mail.');
       } catch(err) {
-        Toast.error(err.message || 'Erreur - verifiez votre email');
+        Toast.error(err.message || 'Erreur - vérifiez votre email');
       }
     },
 
     async demoLogin() {
-      // Mode démo - simuler un utilisateur connecté
       AuthService.save({
         accessToken: 'demo_token',
         refreshToken: 'demo_refresh',
@@ -442,16 +462,8 @@ const AuthPage = (() => {
     },
 
     async submitRegister() {
-      // Compléter les données de l'étape 5
-      const bio        = document.getElementById('ob-bio')?.value.trim();
-      const profession = document.getElementById('ob-profession')?.value.trim();
-      Object.assign(onboardingData, { bio, profession });
-
-      if (!onboardingData.languages?.length) onboardingData.languages = ['fr'];
-
       const btn = document.getElementById('btn-finish');
       if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loader-spinner" style="width:18px;height:18px;margin:0 auto;"></span>'; }
-
       try {
         await AuthService.register(onboardingData);
         Toast.success('Profil créé ! Bienvenue sur Mixte-Meet 🦋');
@@ -463,6 +475,3 @@ const AuthPage = (() => {
     },
   };
 })();
-
-
-
