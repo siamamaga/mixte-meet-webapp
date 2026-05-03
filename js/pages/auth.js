@@ -74,10 +74,7 @@ const AuthPage = (() => {
             <label class="input-label">Mot de passe</label>
             <div class="input-icon-wrap">
               <span class="input-icon">🔒</span>
-              <div style="position:relative;">
-  <input name="password" id="login-password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required style="padding-right:48px;">
-  <button type="button" onclick="AuthPage.togglePassword('login-password',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.5);padding:4px;">👁️</button>
-</div>
+              <input name="password" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password" required>
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
@@ -256,7 +253,7 @@ const AuthPage = (() => {
           </div>
         </div>
       `,
-    };
+    
     6: `
         <div class="onboarding-step">
           <div style="padding:20px 24px 0;display:flex;align-items:center;gap:12px;">
@@ -293,7 +290,7 @@ const AuthPage = (() => {
                     <div style="font-size:24px;">🌟</div>
     return steps[step] || steps[1];
   }
-
+};
   return {
     render,
 
