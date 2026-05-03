@@ -407,39 +407,74 @@ filterOnline(btn) {
     showFilters() {
       const f = currentFilters;
       Modal.show(`
-        <div style="display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;flex-direction:column;gap:16px;padding-bottom:8px;">
+
           <div>
-            <label class="input-label">Genre recherché</label>
+            <label class="input-label" style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">👤 Genre recherché</label>
             <div style="display:flex;gap:8px;margin-top:8px;">
-              <button id="fg-all"  onclick="FeedPage._setGenderBtn('')"      style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${!f.gender?'var(--pink)':'transparent'};color:white;cursor:pointer;">Tous</button>
-              <button id="fg-woman" onclick="FeedPage._setGenderBtn('woman')" style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='woman'?'var(--pink)':'transparent'};color:white;cursor:pointer;">Femmes</button>
-              <button id="fg-man"   onclick="FeedPage._setGenderBtn('man')"   style="flex:1;padding:8px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='man'?'var(--pink)':'transparent'};color:white;cursor:pointer;">Hommes</button>
+              <button id="fg-all"   onclick="FeedPage._setGenderBtn('')"      style="flex:1;padding:9px 6px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${!f.gender?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:13px;">Tous</button>
+              <button id="fg-woman" onclick="FeedPage._setGenderBtn('woman')" style="flex:1;padding:9px 6px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='woman'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:13px;">♀ Femmes</button>
+              <button id="fg-man"   onclick="FeedPage._setGenderBtn('man')"   style="flex:1;padding:9px 6px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.gender==='man'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:13px;">♂ Hommes</button>
             </div>
           </div>
-          <div>
-            <label class="input-label">Âge minimum : <span id="lbl-amin">${f.age_min||18} ans</span></label>
-            <input type="range" min="18" max="65" value="${f.age_min||18}" style="width:100%;margin-top:8px;"
-              oninput="document.getElementById('lbl-amin').textContent=this.value+' ans';FeedPage._tmpFilters.age_min=+this.value">
+
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+            <label class="input-label" style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">💪 Corpulence</label>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              <button id="bt-all"      onclick="FeedPage._setBodyType('')"         style="padding:7px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${!f.body_type?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:12px;">Tous</button>
+              <button id="bt-slim"     onclick="FeedPage._setBodyType('slim')"     style="padding:7px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.body_type==='slim'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:12px;">🧍 Mince</button>
+              <button id="bt-athletic" onclick="FeedPage._setBodyType('athletic')" style="padding:7px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.body_type==='athletic'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:12px;">🏃 Athlétique</button>
+              <button id="bt-average"  onclick="FeedPage._setBodyType('average')"  style="padding:7px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.body_type==='average'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:12px;">🧑 Intermédiaire</button>
+              <button id="bt-curvy"    onclick="FeedPage._setBodyType('curvy')"    style="padding:7px 12px;border-radius:50px;border:1px solid rgba(255,255,255,0.15);background:${f.body_type==='curvy'?'var(--pink)':'transparent'};color:white;cursor:pointer;font-size:12px;">🍑 Rondelette</button>
+            </div>
           </div>
-          <div>
-            <label class="input-label">Âge maximum : <span id="lbl-amax">${f.age_max||60} ans</span></label>
-            <input type="range" min="18" max="70" value="${f.age_max||60}" style="width:100%;margin-top:8px;"
-              oninput="document.getElementById('lbl-amax').textContent=this.value+' ans';FeedPage._tmpFilters.age_max=+this.value">
+
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+            <label class="input-label" style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">💍 Type de relation</label>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:${!f.relation||f.relation==='any'?'rgba(232,49,122,0.15)':'transparent'}">
+                <input type="radio" name="relation" value="any" ${!f.relation||f.relation==='any'?'checked':''} onchange="FeedPage._tmpFilters.relation=this.value" style="accent-color:var(--pink);">
+                <span style="font-size:13px;">🌟 Peu importe</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:${f.relation==='serious'?'rgba(232,49,122,0.15)':'transparent'}">
+                <input type="radio" name="relation" value="serious" ${f.relation==='serious'?'checked':''} onchange="FeedPage._tmpFilters.relation=this.value" style="accent-color:var(--pink);">
+                <span style="font-size:13px;">💍 Relation sérieuse</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:${f.relation==='fun'?'rgba(232,49,122,0.15)':'transparent'}">
+                <input type="radio" name="relation" value="fun" ${f.relation==='fun'?'checked':''} onchange="FeedPage._tmpFilters.relation=this.value" style="accent-color:var(--pink);">
+                <span style="font-size:13px;">💋 Fun / Casual</span>
+              </label>
+            </div>
           </div>
-          <div>
-            <label class="input-label">Continent</label>
-            <select id="filter-continent" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#1A1320;color:white;border:1px solid rgba(255,255,255,0.15);">
-              <option value="">Tous</option>
-              <option value="AF" ${f.continent==='AF'?'selected':''}>Afrique</option>
-              <option value="EU" ${f.continent==='EU'?'selected':''}>Europe</option>
-              <option value="NA" ${f.continent==='NA'?'selected':''}>Amériques</option>
-              <option value="AS" ${f.continent==='AS'?'selected':''}>Asie</option>
-              <option value="OC" ${f.continent==='OC'?'selected':''}>Océanie</option>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+            <label class="input-label" style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">🎂 Âge : <span id="lbl-amin">${f.age_min||18}</span> – <span id="lbl-amax">${f.age_max||60}</span> ans</label>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+              <input type="range" min="18" max="65" value="${f.age_min||18}" style="width:100%;accent-color:var(--pink);"
+                oninput="document.getElementById('lbl-amin').textContent=this.value;FeedPage._tmpFilters.age_min=+this.value">
+              <input type="range" min="18" max="70" value="${f.age_max||60}" style="width:100%;accent-color:var(--pink);"
+                oninput="document.getElementById('lbl-amax').textContent=this.value;FeedPage._tmpFilters.age_max=+this.value">
+            </div>
+          </div>
+
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+            <label class="input-label" style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">🌍 Continent</label>
+            <select id="filter-continent" style="width:100%;margin-top:8px;padding:11px;border-radius:12px;background:#1A1320;color:white;border:1px solid rgba(255,255,255,0.15);font-size:13px;">
+              <option value="">Tous les continents</option>
+              <option value="AF" ${f.continent==='AF'?'selected':''}>🌍 Afrique</option>
+              <option value="EU" ${f.continent==='EU'?'selected':''}>🌎 Europe</option>
+              <option value="NA" ${f.continent==='NA'?'selected':''}>🌎 Amériques</option>
+              <option value="AS" ${f.continent==='AS'?'selected':''}>🌏 Asie</option>
+              <option value="OC" ${f.continent==='OC'?'selected':''}>🌏 Océanie</option>
             </select>
           </div>
-          <button onclick="FeedPage._applyFilters()" style="background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:13px;border-radius:50px;font-weight:700;cursor:pointer;font-size:15px;">Appliquer les filtres</button>
-          <button onclick="FeedPage._resetFilters()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:10px;border-radius:50px;cursor:pointer;font-size:13px;">Réinitialiser</button>
-        </div>`, '⚙️ Filtres');
+
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button onclick="FeedPage._resetFilters()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:12px;border-radius:50px;cursor:pointer;font-size:13px;">Réinitialiser</button>
+            <button onclick="FeedPage._applyFilters()" style="flex:2;background:linear-gradient(135deg,var(--pink),#C41F65);border:none;color:white;padding:12px;border-radius:50px;font-weight:700;cursor:pointer;font-size:14px;">Afficher les résultats</button>
+          </div>
+
+        </div>`, '⚙️ Filtres avancés');
       this._tmpFilters = { ...f };
     },
 
