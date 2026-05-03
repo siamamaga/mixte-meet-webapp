@@ -479,7 +479,8 @@ filterOnline(btn) {
   photoIndexes = {};
   const area = document.getElementById('feed-card-area');
   if (area) area.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;">🔄 Rechargement...</div>';
-  loadProfiles(currentFilters);
+  try { await API.delete('/swipes/reset'); } catch(e) {}
+  loadProfiles({});
 },
   };
 })();
