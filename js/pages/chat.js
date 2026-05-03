@@ -404,12 +404,12 @@ const ChatPage = (() => {
         '<div style="display:flex;flex-direction:column;gap:14px;">' +
           '<p style="font-size:14px;color:var(--muted);">Pourquoi signalez-vous ' + name + ' ?</p>' +
           '<div style="display:flex;flex-direction:column;gap:8px;">' +
-            ['Faux profil','Photos inappropriees','Harcelement','Spam / Arnaque','Contenu haineux','Autre'].map(function(r) {
-              return '<div class="settings-row" onclick="ChatPage._selectReason(this,\'' + r + '\')" style="cursor:pointer;">' +
-                '<div class="settings-text"><span style="font-size:14px;">' + r + '</span></div>' +
-                '<span class="check-reason" style="color:var(--pink);font-size:18px;opacity:0;">&#10003;</span>' +
-              '</div>';
-            }).join('') +
+            [{l:'Faux profil',v:'fake_profile'},{l:'Photos inappropriées',v:'inappropriate_content'},{l:'Harcèlement',v:'harassment'},{l:'Spam / Arnaque',v:'scam'},{l:'Contenu haineux',v:'hate_speech'},{l:'Autre',v:'other'}].map(function(r) {
+  return '<div class="settings-row" onclick="ChatPage._selectReason(this,\'' + r.v + '\')" style="cursor:pointer;">' +
+    '<div class="settings-text"><span style="font-size:14px;">' + r.l + '</span></div>' +
+    '<span class="check-reason" style="color:var(--pink);font-size:18px;opacity:0;">&#10003;</span>' +
+  '</div>';
+}).join('') +
           '</div>' +
           '<textarea id="report-desc" class="input-field" placeholder="Details supplementaires..." rows="3" style="resize:none;"></textarea>' +
           '<button onclick="ChatPage._doReport()" style="background:var(--red);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;">Envoyer le signalement</button>' +
