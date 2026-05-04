@@ -264,11 +264,14 @@ const PricingPage = (() => {
       currency = curr;
       const xofBtn = document.getElementById('btn-xof');
       const eurBtn = document.getElementById('btn-eur');
-      if (xofBtn) { xofBtn.style.background = curr === 'xof' ? 'var(--pink)' : 'transparent'; xofBtn.style.color = curr === 'xof' ? 'white' : 'var(--muted)'; }
-      if (eurBtn) { eurBtn.style.background = curr === 'eur' ? 'var(--pink)' : 'transparent'; eurBtn.style.color = curr === 'eur' ? 'white' : 'var(--muted)'; }
-      // Re-render les prix
-      const plans = document.querySelectorAll('[data-plan-price]');
-      render();
+      if (xofBtn) {
+        xofBtn.style.background = curr === 'xof' ? 'var(--pink)' : 'transparent';
+        xofBtn.style.color = curr === 'xof' ? 'white' : 'var(--muted)';
+      }
+      if (eurBtn) {
+        eurBtn.style.background = curr === 'eur' ? 'var(--pink)' : 'transparent';
+        eurBtn.style.color = curr === 'eur' ? 'white' : 'var(--muted)';
+      }
     },
 
     selectPlan(planId) {
