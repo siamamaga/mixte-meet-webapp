@@ -489,6 +489,13 @@ filterOnline(btn) {
       });
     },
 
+    _setBodyType(bt) {
+      this._tmpFilters.body_type = bt;
+      ['all','slim','athletic','average','curvy'].forEach(k => {
+        const el = document.getElementById('bt-' + k);
+        if (el) el.style.background = (k === (bt||'all')) ? 'var(--pink)' : 'transparent';
+      });
+    },
     _applyFilters() {
       const continent = document.getElementById('filter-continent')?.value || '';
       const newFilters = { ...this._tmpFilters, continent };
