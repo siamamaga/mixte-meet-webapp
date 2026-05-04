@@ -262,23 +262,19 @@ const PricingPage = (() => {
 
     setCurrency(curr) {
       currency = curr;
-      const xofBtn = document.getElementById('btn-xof');
-      const eurBtn = document.getElementById('btn-eur');
-      if (xofBtn) {
-        xofBtn.style.background = curr === 'xof' ? 'var(--pink)' : 'transparent';
-        xofBtn.style.color = curr === 'xof' ? 'white' : 'var(--muted)';
-      }
-      if (eurBtn) {
-        eurBtn.style.background = curr === 'eur' ? 'var(--pink)' : 'transparent';
-        eurBtn.style.color = curr === 'eur' ? 'white' : 'var(--muted)';
-      }
-      document.querySelectorAll('[data-plan-price]').forEach(el => {
-        const planId = el.getAttribute('data-plan-price');
-        const plan = PLANS.find(p => p.id === planId);
-        if (!plan) return;
-        const price = plan.promo?.active ? (curr === 'xof' ? plan.promo.price_xof : plan.promo.price_eur) : (curr === 'xof' ? plan.price_xof : plan.price_eur);
-        el.textContent = curr === 'xof' ? (price === 0 ? 'Gratuit' : price.toLocaleString('fr-FR') + ' CFA') : (price === 0 ? 'Gratuit' : price.toFixed(2) + ' €');
-      });
+      render();
+      setTimeout(() => {
+        const xofBtn = document.getElementById('btn-xof');
+        const eurBtn = document.getElementById('btn-eur');
+        if (xofBtn) {
+          xofBtn.style.background = curr === 'xof' ? 'var(--pink)' : 'transparent';
+          xofBtn.style.color = curr === 'xof' ? 'white' : 'var(--muted)';
+        }
+        if (eurBtn) {
+          eurBtn.style.background = curr === 'eur' ? 'var(--pink)' : 'transparent';
+          eurBtn.style.color = curr === 'eur' ? 'white' : 'var(--muted)';
+        }
+      }, 10);
     },
     selectPlan(planId) {
       const plan = PLANS.find(p => p.id === planId);
