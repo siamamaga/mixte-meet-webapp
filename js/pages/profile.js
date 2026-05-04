@@ -477,7 +477,8 @@ const payload  = { looking_for: lookingFor, age_min, age_max, relation_type: rel
         { emoji: '🤞', label: 'Croisez les doigts' },
         { emoji: '🖐️', label: 'Montrez votre paume ouverte' },
       ];
-      const gesture = GESTURES[Math.floor(Math.random() * GESTURES.length)];
+      const status = await API.get('/me/verify');
+      const gesture = status?.data?.required_gesture || { emoji: '✌️', label: 'Faites le signe V' };
       ProfilePage._currentGesture = gesture.emoji;
 
       Modal.show(
