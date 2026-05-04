@@ -272,8 +272,8 @@ const PricingPage = (() => {
         eurBtn.style.background = curr === 'eur' ? 'var(--pink)' : 'transparent';
         eurBtn.style.color = curr === 'eur' ? 'white' : 'var(--muted)';
       }
+      render();
     },
-
     selectPlan(planId) {
       const plan = PLANS.find(p => p.id === planId);
       if (!plan) return;
