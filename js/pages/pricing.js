@@ -281,18 +281,21 @@ const PricingPage = (() => {
       if (!plan) return;
       const price = plan.promo?.active ? (currency === 'xof' ? plan.promo.price_xof : plan.promo.price_eur) : (currency === 'xof' ? plan.price_xof : plan.price_eur);
       const curr  = currency === 'xof' ? 'CFA' : '€';
-
       Modal.show(`
         <div style="padding:8px;text-align:center;">
           <div style="font-size:40px;margin-bottom:12px;">💳</div>
           <h3 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px;">${plan.name}</h3>
-          <p style="font-size:18px;font-weight:700;color:var(--pink);margin-bottom:20px;">${currency === 'xof' ? price.toLocaleString('fr-FR') : price.toFixed(2)} ${curr}</p>
-
+          <p style="font-size:22px;font-weight:700;color:var(--pink);margin-bottom:16px;">${currency === 'xof' ? price.toLocaleString('fr-FR') : price.toFixed(2)} ${curr}</p>
+          <div style="margin-bottom:16px;text-align:left;">
+            <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px;">📱 Votre numéro Mobile Money</label>
+            <input id="pay-phone" type="tel" placeholder="Ex: +22961234567" class="input-field" style="width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:white;font-size:14px;font-family:'Outfit',sans-serif;">
+            <p style="font-size:11px;color:var(--muted);margin-top:6px;">MTN · Moov · Wave · Orange Money</p>
+          </div>
           <div style="display:flex;flex-direction:column;gap:10px;">
-            <button onclick="PricingPage.payWithFedaPay('${planId}')" style="width:100%;padding:13px;border-radius:50px;background:rgba(255,204,0,0.15);border:1.5px solid rgba(255,204,0,0.4);color:#FFD700;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
-              📱 MTN / Moov / Wave (Mobile Money)
+            <button onclick="PricingPage.payWithFedaPay('${planId}')" style="width:100%;padding:13px;border-radius:50px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;color:#1A0A14;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
+              📱 Payer avec Mobile Money
             </button>
-            <button onclick="Modal.close();Toast.info('Stripe — Bientôt disponible')" style="width:100%;padding:13px;border-radius:50px;background:rgba(232,49,122,0.15);border:1.5px solid rgba(232,49,122,0.4);color:var(--pink-light);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
+            <button onclick="Modal.close();Toast.info('Carte bancaire — Bientôt disponible')" style="width:100%;padding:13px;border-radius:50px;background:rgba(232,49,122,0.15);border:1.5px solid rgba(232,49,122,0.4);color:var(--pink);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
               💳 Carte Visa/Mastercard (Bientôt)
             </button>
           </div>
@@ -302,10 +305,12 @@ const PricingPage = (() => {
     },
 
     async payWithFedaPay(planId) {
+      const phone = document.getElementById('pay-phone')?.value?.trim();
+      if (!phone) { Toast.error('Entrez votre numéro de téléphone'); return; }
       Modal.close();
       Toast.info('Redirection vers le paiement...');
       try {
-        const res = await API.post('/payment/create', { planId });
+        const res = await API.post('/payment/create', { planId, phone });
         if (res?.data?.url) {
           window.location.href = res.data.url;
         } else {
@@ -314,12 +319,6 @@ const PricingPage = (() => {
       } catch(err) {
         Toast.error(err.message || 'Erreur paiement');
       }
-    },
-    // Afficher depuis n'importe où dans l'app
-    show() {
-      const html = '<div id="pricing-container"></div>';
-      Modal.show(html, '');
-      render(document.getElementById('pricing-container'));
     },
   };
 })();
