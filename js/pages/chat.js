@@ -4,7 +4,8 @@ const ChatPage = (() => {
   let currentConvId = null;
   let messages = [];
   let pollingInterval = null;
-  let openId = 0; // identifiant unique par ouverture pour eviter les race conditions
+  let openId = 0;
+  let replyTo = null;
 
   const DEMO_MSGS = {
     1: [
@@ -23,34 +24,27 @@ const ChatPage = (() => {
   }
 
   function open(match) {
-    // Generer un ID unique pour cette ouverture
     const myOpenId = ++openId;
-
-    // Reset TOTAL et immediat
     stopPolling();
     currentMatch = null;
     currentConvId = null;
     messages = [];
+    replyTo = null;
 
-    // Vider l'affichage immediatement
     const existingList = document.getElementById('messages-list');
     if (existingList) existingList.innerHTML = '';
 
-    // Assigner le nouveau match
     currentMatch = match;
     currentConvId = match.conversation_id || null;
 
     App.navigate('chat');
     render();
-
-    // Charger les messages avec le bon openId
     loadMessages(myOpenId);
     ChatPage.stopIncomingCallPolling();
     ChatPage.startIncomingCallPolling();
   }
 
   async function loadMessages(myOpenId) {
-    // Si un autre open() a ete appele entretemps, abandonner
     if (myOpenId !== openId) return;
 
     if (isDemo()) {
@@ -61,10 +55,9 @@ const ChatPage = (() => {
     }
 
     try {
-      // Creer conversation si necessaire
       if (!currentConvId) {
         const conv = await API.post('/conversations/find-or-create', { user_uuid: currentMatch.uuid });
-        if (myOpenId !== openId) return; // abandonner si autre match ouvert
+        if (myOpenId !== openId) return;
         currentConvId = conv?.data?.conversation_id;
         currentMatch.conversation_id = currentConvId;
       }
@@ -72,15 +65,20 @@ const ChatPage = (() => {
       if (!currentConvId) { renderMessages(); return; }
 
       const data = await API.get('/conversations/' + currentConvId + '/messages?t=' + Date.now());
-      if (myOpenId !== openId) return; // abandonner si autre match ouvert
+      if (myOpenId !== openId) return;
 
       const myUuid = AuthService.getUser()?.uuid;
       messages = (data?.data || []).map(msg => ({
         id: msg.id,
         sent: msg.sender_uuid === myUuid,
         content: msg.content,
+        is_read: msg.is_read,
+        voice_url: msg.voice_url || null,
+        duration: msg.duration || 0,
+        reply_to: msg.reply_to || null,
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
+
       if (currentConvId) {
         API.put('/conversations/' + currentConvId + '/read', {}).then(function() {
           messages = messages.map(function(m) {
@@ -95,7 +93,6 @@ const ChatPage = (() => {
       startPolling(myOpenId);
     } catch(e) {
       if (myOpenId !== openId) return;
-      console.log('Messages error:', e);
       messages = [];
       renderMessages();
     }
@@ -116,6 +113,7 @@ const ChatPage = (() => {
           is_read: msg.is_read,
           voice_url: msg.voice_url || null,
           duration: msg.duration || 0,
+          reply_to: msg.reply_to || null,
           time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
         }));
         const hasNewMsg = newMsgs.length > messages.length;
@@ -162,6 +160,13 @@ const ChatPage = (() => {
           '<div id="messages-list"></div>' +
           '<div id="typing-zone"></div>' +
         '</div>' +
+        '<div id="reply-bar" style="display:none;background:var(--surface);border-top:1px solid var(--border);padding:8px 16px;align-items:center;gap:10px;">' +
+          '<div style="flex:1;border-left:3px solid var(--pink);padding-left:10px;">' +
+            '<div id="reply-bar-name" style="font-size:11px;color:var(--pink);font-weight:600;margin-bottom:2px;"></div>' +
+            '<div id="reply-bar-text" style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;"></div>' +
+          '</div>' +
+          '<button onclick="ChatPage.cancelReply()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;">✕</button>' +
+        '</div>' +
         '<div class="chat-input-bar">' +
           '<button class="header-btn" id="btn-voice-record" onclick="ChatPage.toggleVoiceRecord()" title="Message vocal">🎙️</button>' +
           '<textarea class="chat-input-field" id="msg-input" placeholder="Votre message..." rows="1" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();ChatPage.send();}"></textarea>' +
@@ -180,7 +185,7 @@ const ChatPage = (() => {
 
   function renderMsg(msg) {
     const avatar = currentMatch ? (currentMatch.emoji || '👤') : '👤';
-    // Indicateur de statut message style WhatsApp
+    const partnerName = currentMatch ? (currentMatch.first_name || 'Partenaire') : 'Partenaire';
     let statusIcon = '';
     if (msg.sent) {
       if (msg.is_read) {
@@ -191,9 +196,25 @@ const ChatPage = (() => {
         statusIcon = '<span style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:3px;">✓</span>';
       }
     }
-    return '<div class="chat-message ' + (msg.sent ? 'sent' : 'recv') + '">' +
+
+    // Aperçu du message cité
+    var replyHtml = '';
+    if (msg.reply_to) {
+      var replyName = msg.reply_to.sent ? 'Vous' : partnerName;
+      var replyContent = msg.reply_to.voice_url ? '🎙️ Message vocal' : (msg.reply_to.content || '');
+      replyHtml = '<div style="background:rgba(255,255,255,0.1);border-left:3px solid var(--pink);border-radius:6px 6px 0 0;padding:5px 10px;font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:2px;cursor:pointer;" onclick="ChatPage.scrollToMsg(' + (msg.reply_to.id || 0) + ')">' +
+        '<strong style="color:var(--pink);display:block;font-size:11px;margin-bottom:2px;">' + replyName + '</strong>' +
+        replyContent +
+        '</div>';
+    }
+
+    // Bouton répondre
+    var replyBtn = '<button onclick="ChatPage.setReply(' + msg.id + ')" style="position:absolute;' + (msg.sent ? 'left:-36px;' : 'right:-36px;') + 'top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:50%;opacity:0;transition:opacity 0.2s;" class="reply-btn">↩</button>';
+
+    return '<div class="chat-message ' + (msg.sent ? 'sent' : 'recv') + '" id="msg-' + msg.id + '" onmouseenter="this.querySelector(\'.reply-btn\').style.opacity=\'1\'" onmouseleave="this.querySelector(\'.reply-btn\').style.opacity=\'0\'">' +
       (!msg.sent ? '<div class="msg-avatar">' + avatar + '</div>' : '') +
-      '<div>' +
+      '<div style="position:relative;">' +
+        replyHtml +
         (msg.voice_url
         ? '<div class="msg-bubble" style="padding:8px 12px;min-width:160px;">' +
             '<audio controls style="width:100%;max-width:220px;height:36px;" src="' + msg.voice_url + '"></audio>' +
@@ -201,6 +222,7 @@ const ChatPage = (() => {
           '</div>'
         : '<div class="msg-bubble">' + (msg.content || '') + '</div>') +
         '<div class="msg-time">' + msg.time + statusIcon + '</div>' +
+        replyBtn +
       '</div>' +
     '</div>';
   }
@@ -227,7 +249,38 @@ const ChatPage = (() => {
       currentMatch = null;
       currentConvId = null;
       messages = [];
+      replyTo = null;
       App.navigate('matches');
+    },
+
+    setReply(msgId) {
+      const msg = messages.find(m => m.id === msgId);
+      if (!msg) return;
+      replyTo = msg;
+      const bar = document.getElementById('reply-bar');
+      if (bar) {
+        bar.style.display = 'flex';
+        const partnerName = currentMatch ? (currentMatch.first_name || 'Partenaire') : 'Partenaire';
+        document.getElementById('reply-bar-name').textContent = msg.sent ? 'Vous' : partnerName;
+        document.getElementById('reply-bar-text').textContent = msg.voice_url ? '🎙️ Message vocal' : (msg.content || '');
+        document.getElementById('msg-input')?.focus();
+      }
+    },
+
+    cancelReply() {
+      replyTo = null;
+      const bar = document.getElementById('reply-bar');
+      if (bar) bar.style.display = 'none';
+    },
+
+    scrollToMsg(msgId) {
+      const el = document.getElementById('msg-' + msgId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transition = 'background 0.3s';
+        el.style.background = 'rgba(232,49,122,0.2)';
+        setTimeout(() => { el.style.background = ''; }, 1000);
+      }
     },
 
     async send() {
@@ -235,7 +288,6 @@ const ChatPage = (() => {
       if (!input || !input.value.trim()) return;
       const text = input.value.trim();
 
-      // Limite 3 messages pour non-premium
       const sentCount = messages.filter(function(m) { return m.sent; }).length;
       const isPremium = AuthService.getUser()?.is_premium || false;
       if (!isPremium && sentCount >= 3) {
@@ -251,8 +303,11 @@ const ChatPage = (() => {
       }
 
       input.value = '';
+      const currentReply = replyTo;
+      ChatPage.cancelReply();
+
       const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-      const optimistic = { id: Date.now(), sent: true, content: text, time: now };
+      const optimistic = { id: Date.now(), sent: true, content: text, time: now, reply_to: currentReply };
       appendMsg(optimistic);
 
       if (isDemo()) {
@@ -275,9 +330,10 @@ const ChatPage = (() => {
             currentMatch.conversation_id = currentConvId;
           }
           if (!currentConvId) throw new Error('Conversation introuvable');
-          await API.post('/conversations/' + currentConvId + '/messages?t=' + Date.now(), { content: text });
+          const body = { content: text };
+          if (currentReply) body.reply_to_id = currentReply.id;
+          await API.post('/conversations/' + currentConvId + '/messages?t=' + Date.now(), body);
         } catch(e) {
-          console.log('Send error:', e);
           Toast.error('Erreur envoi: ' + (e.message || e.status || 'connexion'));
         }
       }
@@ -285,17 +341,13 @@ const ChatPage = (() => {
 
     startAudioCall() {
       const user = AuthService.getUser();
-      if (!user?.is_premium) {
-        Toast.info('Appels audio — fonctionnalité Premium ⭐');
-        App.navigate('pricing');
-        return;
-      }
+      if (!user?.is_premium) { Toast.info('Appels audio — fonctionnalité Premium ⭐'); App.navigate('pricing'); return; }
       if (!currentMatch || !currentConvId) return;
       const toId = currentMatch.partner_id || currentMatch.id || currentMatch.match_id;
-      console.log('startAudioCall userId:', toId, 'match:', JSON.stringify(currentMatch));
       if (!toId) { Toast.error('Impossible de trouver le destinataire'); return; }
       VideoCall.startAudioCall({ ...currentMatch, userId: toId }, currentConvId);
     },
+
     startIncomingCallPolling() {
       if (!currentConvId) return;
       ChatPage._incomingPoll = setInterval(async function() {
@@ -311,32 +363,27 @@ const ChatPage = (() => {
         } catch(e) {}
       }, 3000);
     },
+
     stopIncomingCallPolling() {
       if (ChatPage._incomingPoll) { clearInterval(ChatPage._incomingPoll); ChatPage._incomingPoll = null; }
     },
+
     toggleVoiceRecord() {
       const user = AuthService.getUser();
-      if (!user?.is_premium) {
-        Toast.info('Messages vocaux — fonctionnalité Premium ⭐');
-        App.navigate('pricing');
-        return;
-      }
+      if (!user?.is_premium) { Toast.info('Messages vocaux — fonctionnalité Premium ⭐'); App.navigate('pricing'); return; }
       VoiceMessage.toggle(currentConvId, currentMatch);
     },
+
     startVideoCall() {
       const user = AuthService.getUser();
-      if (!user?.is_premium) {
-        Toast.info('Appels vidéo HD — fonctionnalité Premium ⭐');
-        App.navigate('pricing');
-        return;
-      }
+      if (!user?.is_premium) { Toast.info('Appels vidéo HD — fonctionnalité Premium ⭐'); App.navigate('pricing'); return; }
       if (!currentMatch || !currentConvId) return;
       const toId2 = currentMatch.partner_id || currentMatch.id || currentMatch.match_id;
       VideoCall.startCall({ ...currentMatch, userId: toId2 }, currentConvId);
     },
+
     showOptions() {
       if (!currentMatch) return;
-      const name = currentMatch.first_name || 'cet utilisateur';
       Modal.show(
         '<div style="display:flex;flex-direction:column;gap:4px;">' +
           '<div class="settings-row" onclick="Modal.close();ChatPage.viewProfile()">' +
@@ -405,11 +452,11 @@ const ChatPage = (() => {
           '<p style="font-size:14px;color:var(--muted);">Pourquoi signalez-vous ' + name + ' ?</p>' +
           '<div style="display:flex;flex-direction:column;gap:8px;">' +
             [{l:'Faux profil',v:'fake_profile'},{l:'Photos inappropriées',v:'inappropriate_content'},{l:'Harcèlement',v:'harassment'},{l:'Spam / Arnaque',v:'scam'},{l:'Contenu haineux',v:'hate_speech'},{l:'Autre',v:'other'}].map(function(r) {
-  return '<div class="settings-row" onclick="ChatPage._selectReason(this,\'' + r.v + '\')" style="cursor:pointer;">' +
-    '<div class="settings-text"><span style="font-size:14px;">' + r.l + '</span></div>' +
-    '<span class="check-reason" style="color:var(--pink);font-size:18px;opacity:0;">&#10003;</span>' +
-  '</div>';
-}).join('') +
+              return '<div class="settings-row" onclick="ChatPage._selectReason(this,\'' + r.v + '\')" style="cursor:pointer;">' +
+                '<div class="settings-text"><span style="font-size:14px;">' + r.l + '</span></div>' +
+                '<span class="check-reason" style="color:var(--pink);font-size:18px;opacity:0;">&#10003;</span>' +
+              '</div>';
+            }).join('') +
           '</div>' +
           '<textarea id="report-desc" class="input-field" placeholder="Details supplementaires..." rows="3" style="resize:none;"></textarea>' +
           '<button onclick="ChatPage._doReport()" style="background:var(--red);border:none;color:white;padding:14px;border-radius:50px;font-weight:700;cursor:pointer;">Envoyer le signalement</button>' +
@@ -420,8 +467,7 @@ const ChatPage = (() => {
     _selectReason(el, reason) {
       ChatPage._selectedReason = reason;
       document.querySelectorAll('.check-reason').forEach(s => s.style.opacity = '0');
-      const checks = el.querySelectorAll('.check-reason');
-      checks.forEach(c => c.style.opacity = '1');
+      el.querySelectorAll('.check-reason').forEach(c => c.style.opacity = '1');
     },
 
     async _doReport() {
@@ -437,23 +483,3 @@ const ChatPage = (() => {
     },
   };
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
