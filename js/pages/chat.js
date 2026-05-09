@@ -75,7 +75,7 @@ const ChatPage = (() => {
         is_read: msg.is_read,
         voice_url: msg.voice_url || null,
         duration: msg.duration || 0,
-        reply_to: msg.reply_to || null,
+        reply_to: msg.reply_to_id ? { id: msg.reply_to_id, content: msg.reply_to_content, sent: msg.sender_uuid !== myUuid } : null,
         time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
       }));
 
@@ -113,7 +113,7 @@ const ChatPage = (() => {
           is_read: msg.is_read,
           voice_url: msg.voice_url || null,
           duration: msg.duration || 0,
-          reply_to: msg.reply_to || null,
+          reply_to: msg.reply_to_id ? { id: msg.reply_to_id, content: msg.reply_to_content, sent: msg.sender_uuid !== myUuid } : null,
           time: new Date(msg.created_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}),
         }));
         const hasNewMsg = newMsgs.length > messages.length;
