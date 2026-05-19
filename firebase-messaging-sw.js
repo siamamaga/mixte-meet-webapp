@@ -23,3 +23,10 @@ messaging.onBackgroundMessage(function(payload) {
     data: payload.data
   });
 });
+
+// Ne pas intercepter les requêtes API
+self.addEventListener('fetch', function(event) {
+  if (event.request.url.includes('api.mixte-meet.fr')) {
+    return;
+  }
+});

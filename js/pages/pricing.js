@@ -28,8 +28,8 @@ const PricingPage = (() => {
       id: 'weekly',
       name: 'Premium 1 semaine',
       duration: '7 jours',
-      price_xof: 100,
-      price_eur: 0.15,
+      price_xof: 3500,
+      price_eur: 5.90,
       promo: null,
       popular: false,
       coins_bonus: 100,
@@ -291,6 +291,14 @@ const PricingPage = (() => {
             <input id="pay-phone" type="tel" placeholder="Ex: +22961234567" class="input-field" style="width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:white;font-size:14px;font-family:'Outfit',sans-serif;">
             <p style="font-size:11px;color:var(--muted);margin-top:6px;">MTN · Moov · Wave · Orange Money</p>
           </div>
+          <div style="margin-bottom:16px;text-align:left;">
+            <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px;">🏷️ Code promo (optionnel)</label>
+            <div style="display:flex;gap:8px;">
+              <input id="pay-promo" type="text" placeholder="Ex: JEAN229" style="flex:1;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:white;font-size:14px;font-family:'Outfit',sans-serif;text-transform:uppercase;">
+              <button onclick="PricingPage.applyPromo('${planId}')" style="padding:12px 16px;border-radius:12px;background:rgba(232,49,122,0.2);border:1px solid rgba(232,49,122,0.4);color:var(--pink);font-weight:600;cursor:pointer;">Valider</button>
+            </div>
+            <div id="promo-result" style="margin-top:8px;font-size:12px;"></div>
+          </div>
           <div style="display:flex;flex-direction:column;gap:10px;">
             <button onclick="PricingPage.payWithFedaPay('${planId}')" style="width:100%;padding:13px;border-radius:50px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;color:#1A0A14;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;">
               📱 Payer avec Mobile Money
@@ -310,14 +318,38 @@ const PricingPage = (() => {
       Modal.close();
       Toast.info('Redirection vers le paiement...');
       try {
-        const res = await API.post('/payment/create', { planId, phone });
+        const body = { planId, phone };
+        const promoCode = document.getElementById('pay-promo')?.value?.trim().toUpperCase();
+        if (promoCode) body.promo_code = promoCode;
+        if (window._promoData?.affiliate_id) body.affiliate_id = window._promoData.affiliate_id;
+        const res = await API.post('/payment/create', body);
         if (res?.data?.url) {
+          window._promoData = null;
           window.location.href = res.data.url;
         } else {
           Toast.error('Erreur lors de la création du paiement');
         }
       } catch(err) {
         Toast.error(err.message || 'Erreur paiement');
+      }
+    },
+    async applyPromo(planId) {
+      const code = document.getElementById('pay-promo')?.value?.trim().toUpperCase();
+      if (!code) { Toast.error('Entrez un code promo'); return; }
+      try {
+        const res = await API.post('/payment/validate-promo', { code, planId });
+        if (res?.success) {
+          const d = res.data;
+          document.getElementById('promo-result').innerHTML = '<span style="color:#22C55E;">✅ -' + d.discount_pct + '% ! Prix : ' + d.discounted_price.toLocaleString('fr-FR') + ' CFA (économie ' + d.savings.toLocaleString('fr-FR') + ' CFA)</span>';
+          window._promoData = d;
+          const priceEl = document.querySelector('#modal-content p, #modal-box p');
+          document.querySelectorAll('[style*="font-size:22px"]').forEach(el=>{ if(el.textContent.includes('CFA')) el.innerHTML = d.discounted_price.toLocaleString('fr-FR') + ' CFA <small style="text-decoration:line-through;font-size:14px;color:rgba(255,255,255,0.4);">' + d.original_price.toLocaleString('fr-FR') + ' CFA</small>'; });
+        } else {
+          document.getElementById('promo-result').innerHTML = '<span style="color:#EF4444;">❌ ' + res.message + '</span>';
+          window._promoData = null;
+        }
+      } catch(e) {
+        document.getElementById('promo-result').innerHTML = '<span style="color:#EF4444;">❌ Erreur validation</span>';
       }
     },
   };
